@@ -8,20 +8,7 @@ we did some optimizations where we use hashing to make sure we don't lod templat
 ```python
 ~: kosmos 'j.tools.jinja2.test_performance()'
 
-DURATION FOR:jinja_code
-duration:0.13833117485046387
-nritems:1000.0
-performance:7229/sec
 
-DURATION FOR:jinja_code2
-duration:0.0999600887298584
-nritems:1000.0
-performance:10003/sec
-
-DURATION FOR:jinja text
-duration:0.06356000900268555
-nritems:5000.0
-performance:78665/sec
 ```
 
 ## python code render

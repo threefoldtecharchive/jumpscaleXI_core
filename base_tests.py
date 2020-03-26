@@ -33,10 +33,6 @@ j.core.myenv
 
 # from jumpscale11.data.hash import *
 
-from jumpscale11.installers.Nix import Nix
-
-n = Nix()
-n.install()
 
 # j.core.codetools.init_generate(
 #     "/Users/despiegk/sandbox/code/github/threefoldtech/jumpscaleXI_core/jumpscale11/data/serializers"

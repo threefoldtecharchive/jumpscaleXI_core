@@ -1,15 +1,12 @@
 from Jumpscale import j
 import os
-from jinja2 import Template, StrictUndefined
 
-skip = j.baseclasses.testtools._skip
+import data.hash
 
 
-class Jinja2(j.baseclasses.object):
+class UTemplate:
     """
     """
-
-    __jslocation__ = "j.tools.jinja2"
 
     def _init(self, **kwargs):
         self._codegendir = j.core.tools.text_replace("{DIR_VAR}/codegen")
@@ -48,7 +45,7 @@ class Jinja2(j.baseclasses.object):
             if reload is False and path in self._path_to_contenthash:
                 md5 = self._path_to_contenthash[path]
             else:
-                text = j.sal.fs.readFile(path)
+                text = j.core.tools.file_read(path)
 
         if md5 is None:
             md5 = j.data.hash.md5_string(text)
