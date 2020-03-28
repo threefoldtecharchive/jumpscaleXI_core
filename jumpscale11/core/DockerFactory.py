@@ -923,7 +923,9 @@ class DockerContainer:
     #     Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
     #
 
-    def install_jumpscale(self, secret=None, privatekey=None, force=False, threebot=True, pull=False, branch=None):
+    def install_jumpscale(
+        self, secret=None, privatekey=None, force=False, threebot=True, pull=False, branch=None, update=False
+    ):
         redo = force  # is for jumpscale only
         if not force:
             if not self.executor.state_exists("STATE_JUMPSCALE"):
@@ -954,18 +956,16 @@ class DockerContainer:
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            cmd = (
-                "python3 /sandbox/code/github/threefoldtech/jumpscaleX_core/install/jsx.py configure --sshkey %s -s"
-                % MyEnv.sshagent.key_default_name
+            self.execute(
+                """
+            rm -f /tmp/InstallTools.py
+            rm -f /tmp/jsx
+            ln -s /sandbox/code/github/threefoldtech/jumpscaleX_core/install/jsx.py /tmp/jsx
+            """
             )
-            j.core.tools.log("CONFIGURE THE CONTAINER", data=cmd)
-            self.execute(cmd)
-            self.execute("rm -f /tmp/InstallTools.py;rm -f /tmp/jsx")
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX_core/install/jsx.py install -s"
-            cmd += args_txt
         else:
             print(" - copy installer over from where I install from")
-
+            # TODO: use executor upload function
             for item in ["jsx", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P {} -o StrictHostKeyChecking=no \
@@ -975,38 +975,17 @@ class DockerContainer:
                 )
                 Tools.execute(cmd)
 
-                cmd = (
-                    "cd /tmp;python3 jsx configure --sshkey %s -s;python3 jsx install -s"
-                    % MyEnv.sshagent.key_default_name
-                )
-                cmd += args_txt
+        cmd = f"""
+        cd /tmp
+        python3 ./jsx configure --sshkey {MyEnv.sshagent.key_default_name} -s
+        python3 ./jsx install -s {args_txt}
+        """
         print(" - Installing jumpscaleX ")
-        self.execute("apt-get install python3-click -y")
         self.execute(cmd, retry=2)
 
-        cmd = """
-        echo 'autoclean'
-        apt-get autoclean -y
-        apt-get clean -y
-        apt-get autoremove -y
-        """
-        self.execute(cmd)
-
         k = """
-
         install succesfull:
-
-        # if you use a container do:
-        /tmp/jsx container-kosmos
-
-        or
-
-        kosmos
-
         """
-        args = {}
-        args["port"] = self.config.sshport
-        print(Tools.text_replace(k, args=args))
 
         self.executor.state_set("STATE_JUMPSCALE")
         if threebot:
