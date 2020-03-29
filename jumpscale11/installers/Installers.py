@@ -3,7 +3,7 @@ class JumpscaleInstaller:
 
         j.core.myenv.check_platform()
         # will check if there's already a key loaded (forwarded) will continue installation with it
-        rc, _, _ = Tools.execute("ssh-add -L")
+        rc, _, _ = j.core.tools.execute("ssh-add -L")
         if not rc:
             if "SSH_Agent" in j.core.myenv.config and j.core.myenv.config["SSH_Agent"]:
                 j.core.myenv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
@@ -15,7 +15,7 @@ class JumpscaleInstaller:
 
         BaseInstaller.install(sandboxed=sandboxed, force=force, branch=branch, pips_level=pips_level)
 
-        Tools.file_touch(os.path.join(j.core.myenv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
+        j.core.tools.file_touch(os.path.join(j.core.myenv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
         self.repos_get(pull=gitpull, branch=branch)
         self.repos_link()
@@ -32,10 +32,10 @@ class JumpscaleInstaller:
         # kosmos --instruct=/tmp/instructions.toml
         kosmos 'j.core.tools.pprint("JumpscaleX init step for encryption OK.")'
         """
-        Tools.execute(script, die_if_args_left=True)
+        j.core.tools.execute(script, die_if_args_left=True)
 
         if threebot:
-            Tools.execute_jumpscale("j.servers.threebot.start(background=True)")
+            j.core.tools.execute_jumpscale("j.servers.threebot.start(background=True)")
             timestop = time.time() + 240.0
             ok = False
             while ok == False and time.time() < timestop:
@@ -48,15 +48,15 @@ class JumpscaleInstaller:
 
             print(" - Threebot stopped")
             if not ok:
-                raise Tools.exceptions.Base("could not stop threebot after install")
-            Tools.execute("j.servers.threebot.default.stop()", die=False, jumpscale=True, showout=False)
+                raise j.exceptions.Base("could not stop threebot after install")
+            j.core.tools.execute("j.servers.threebot.default.stop()", die=False, jumpscale=True, showout=False)
             time.sleep(2)
-            Tools.execute("j.servers.threebot.default.stop()", die=True, jumpscale=True)
+            j.core.tools.execute("j.servers.threebot.default.stop()", die=True, jumpscale=True)
 
     def remove_old_parts(self):
         tofind = ["DigitalMe", "Jumpscale", "ZeroRobot"]
         for part in sys.path:
-            if Tools.exists(part) and os.path.isdir(part):
+            if j.core.tools.exists(part) and os.path.isdir(part):
                 # print(" - REMOVE OLD PARTS:%s" % part)
                 for item in os.listdir(part):
                     for item_tofind in tofind:
@@ -67,20 +67,20 @@ class JumpscaleInstaller:
                             and toremove.find("github") == -1
                         ):
                             j.core.tools.log("found old jumpscale item to remove:%s" % toremove)
-                            Tools.delete(toremove)
+                            j.core.tools.delete(toremove)
                         if item.find(".pth") != -1:
                             out = ""
-                            for line in Tools.file_text_read(toremove).split("\n"):
+                            for line in j.core.tools.file_text_read(toremove).split("\n"):
                                 if line.find("threefoldtech") == -1:
                                     out += "%s\n" % line
                             try:
-                                Tools.file_write(toremove, out)
+                                j.core.tools.file_write(toremove, out)
                             except:
                                 pass
-                            # Tools.shell()
+                            # j.core.tools.shell()
         tofind = ["js_", "js9"]
         for part in os.environ["PATH"].split(":"):
-            if Tools.exists(part):
+            if j.core.tools.exists(part):
                 for item in os.listdir(part):
                     for item_tofind in tofind:
                         toremove = os.path.join(part, item)
@@ -90,7 +90,7 @@ class JumpscaleInstaller:
                             and toremove.find("github") == -1
                         ):
                             j.core.tools.log("found old jumpscale item to remove:%s" % toremove)
-                            Tools.delete(toremove)
+                            j.core.tools.delete(toremove)
 
     # def prebuilt_copy(self):
     #     """
@@ -99,10 +99,10 @@ class JumpscaleInstaller:
     #     """
     #     self.cmds_link(generate_js=False)
     #     # why don't we use our primitives here?
-    #     Tools.execute("cp -a {DIR_CODE}/github/threefoldtech/sandbox_threebot_linux64/* /")
+    #     j.core.tools.execute("cp -a {DIR_CODE}/github/threefoldtech/sandbox_threebot_linux64/* /")
     #     # -a won't copy hidden files
-    #     Tools.execute("cp {DIR_CODE}/github/threefoldtech/sandbox_threebot_linux64/.startup.toml /")
-    #     Tools.execute("source {DIR_BASE}/env.sh; kosmos 'j.data.nacl.configure(generate=True,interactive=False)'")
+    #     j.core.tools.execute("cp {DIR_CODE}/github/threefoldtech/sandbox_threebot_linux64/.startup.toml /")
+    #     j.core.tools.execute("source {DIR_BASE}/env.sh; kosmos 'j.data.nacl.configure(generate=True,interactive=False)'")
     #
     def repos_get(self, pull=False, prebuilt=False, branch=None, reset=False):
         assert not prebuilt  # not supported yet
@@ -113,15 +113,15 @@ class JumpscaleInstaller:
             GITURL, BRANCH, RPATH, DEST = d
             if branch:
                 C = f"""git ls-remote --heads {GITURL} {branch}"""
-                _, out, _ = Tools.execute(C, showout=False, die_if_args_left=True, interactive=False)
+                _, out, _ = j.core.tools.execute(C, showout=False, die_if_args_left=True, interactive=False)
                 if out:
                     BRANCH = branch
 
             try:
-                dest = Tools.code_github_get(url=GITURL, rpath=RPATH, branch=BRANCH, pull=pull, reset=reset)
+                dest = j.core.tools.code_github_get(url=GITURL, rpath=RPATH, branch=BRANCH, pull=pull, reset=reset)
             except Exception as e:
-                r = Tools.code_git_rewrite_url(url=GITURL, ssh=False)
-                Tools.code_github_get(url=GITURL, rpath=RPATH, branch=BRANCH, pull=pull)
+                r = j.core.tools.code_git_rewrite_url(url=GITURL, ssh=False)
+                j.core.tools.code_github_get(url=GITURL, rpath=RPATH, branch=BRANCH, pull=pull)
 
         if prebuilt:
             self.prebuilt_copy()
@@ -135,10 +135,10 @@ class JumpscaleInstaller:
         for NAME, d in GITREPOS.items():
             GITURL, BRANCH, PATH, DEST = d
 
-            (host, type, account, repo, url2, branch2, GITPATH, RPATH, port) = Tools.code_giturl_parse(url=GITURL)
+            (host, type, account, repo, url2, branch2, GITPATH, RPATH, port) = j.core.tools.code_giturl_parse(url=GITURL)
             srcpath = "%s/%s" % (GITPATH, PATH)
-            if not Tools.exists(srcpath):
-                raise Tools.exceptions.Base("did not find:%s" % srcpath)
+            if not j.core.tools.exists(srcpath):
+                raise j.exceptions.Base("did not find:%s" % srcpath)
 
             DESTPARENT = os.path.dirname(DEST.rstrip())
 
@@ -148,15 +148,16 @@ class JumpscaleInstaller:
             mkdir -p {DESTPARENT}
             ln -s {GITPATH}/{PATH} {DEST}
             """
-            Tools.execute(script, die_if_args_left=True)
+            j.core.tools.execute(script, die_if_args_left=True)
 
     def cmds_link(self, generate_js=True):
-        _, _, _, _, loc = Tools._code_location_get(repo="jumpscaleX_core/", account="threefoldtech")
+        _, _, _, _, loc = j.core.tools._code_location_get(repo="jumpscaleX_core/", account="threefoldtech")
         for src in os.listdir("%s/cmds" % loc):
             src2 = os.path.join(loc, "cmds", src)
             dest = "%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)
             if not os.path.exists(dest):
-                Tools.link(src2, dest, chmod=770)
-        Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
+                j.core.tools.link(src2, dest, chmod=770)
+        j.core.tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
         if generate_js:
-            Tools.execute("cd {DIR_BASE};source env.sh;js_init generate", interactive=False, die_if_args_left=True)
+            j.core.tools.execute("cd {DIR_BASE};source env.sh;js_init generate", interactive=False, die_if_args_left=True)
+

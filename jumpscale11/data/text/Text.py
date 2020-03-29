@@ -232,7 +232,7 @@ class Text:
     ):
         """
 
-        Tools.text_replace
+        j.core.tools.text_replace
 
         content example:
 
@@ -257,7 +257,7 @@ class Text:
             content = content.decode()
 
         if not isinstance(content, str):
-            raise Tools.exceptions.Input("content needs to be str")
+            raise j.exceptions.Input("content needs to be str")
 
         if args is None:
             args = {}
@@ -266,7 +266,7 @@ class Text:
             return content
 
         if executor:
-            content2 = Tools.args_replace(
+            content2 = j.core.tools.args_replace(
                 content,
                 # , executor.info.cfg_jumpscale
                 args_list=(args, executor.config),
@@ -275,16 +275,16 @@ class Text:
                 primitives_only=primitives_only,
             )
         else:
-            content2 = Tools.args_replace(
+            content2 = j.core.tools.args_replace(
                 content,
-                args_list=(args, Tools._j.core.myenv.config),
+                args_list=(args, j.core.myenv.config),
                 ignorecolors=ignorecolors,
                 die_if_args_left=die_if_args_left,
                 primitives_only=primitives_only,
             )
 
         if text_strip:
-            content2 = Tools.text_strip(content2, ignorecomments=ignorecomments, replace=False)
+            content2 = j.data.text.strip(content2, ignorecomments=ignorecomments, replace=False)
 
         return content2
 
@@ -298,7 +298,7 @@ class Text:
 
         """
         # text = unidecode(text)  # convert to ascii letters
-        # text=Tools.strip_to_ascii(text) #happens later already
+        # text=j.core.tools.strip_to_ascii(text) #happens later already
         text = text.lower()
         text = text.replace("\n", "")
         text = text.replace("\t", "")
@@ -373,7 +373,7 @@ class Text:
             if primitives_only:
                 return None
             else:
-                return Tools._data_serializer_safe(val)
+                return j.core.tools._data_serializer_safe(val)
 
         def args_combine():
             args_new = {}
@@ -384,11 +384,11 @@ class Text:
                         if val:
                             args_new[key] = val
 
-            for field_name in Tools._j.core.myenv.MYCOLORS:
+            for field_name in j.core.myenv.MYCOLORS:
                 if ignorecolors:
                     args_new[field_name] = ""
                 else:
-                    args_new[field_name] = Tools._j.core.myenv.MYCOLORS[field_name]
+                    args_new[field_name] = j.core.myenv.MYCOLORS[field_name]
 
             return args_new
 
@@ -410,7 +410,7 @@ class Text:
                 line = line.replace("{}", ">>EMPTYDICT<<")
 
             try:
-                items = [i for i in Tools.formatter.parse(line)]
+                items = [i for i in j.core.tools.formatter.parse(line)]
             except Exception as e:
                 return process_line_failback(line)
 
@@ -419,17 +419,17 @@ class Text:
             for literal_text, field_name, format_spec, conversion in items:
                 if not field_name:
                     continue
-                if field_name in Tools._j.core.myenv.MYCOLORS:
+                if field_name in j.core.myenv.MYCOLORS:
                     if ignorecolors:
                         do[field_name] = ""
                     else:
-                        do[field_name] = Tools._j.core.myenv.MYCOLORS[field_name]
+                        do[field_name] = j.core.myenv.MYCOLORS[field_name]
                 for args in args_list:
                     if field_name in args:
                         do[field_name] = arg_process(field_name, args[field_name])
                 if field_name not in do:
                     if die_if_args_left:
-                        raise Tools.exceptions.Input("could not find:%s in line:%s" % (field_name, line))
+                        raise j.exceptions.Input("could not find:%s in line:%s" % (field_name, line))
                     # put back the original
                     if conversion and format_spec:
                         do[field_name] = "{%s!%s:%s}" % (field_name, conversion, format_spec)
@@ -562,18 +562,18 @@ class Text:
 
         """
         if content is None:
-            raise Tools.exceptions.Base("content cannot be None")
+            raise j.exceptions.Base("content cannot be None")
         if content == "":
             return content
         if not prefix:
             prefix = ""
         content = str(content)
         if args is not None:
-            content = Tools.text_replace(content, args=args)
+            content = j.data.text.replace(content, args=args)
         if strip:
-            content = Tools.text_strip(content, replace=False)
+            content = j.data.text.strip(content, replace=False)
         if wrap > 0:
-            content = Tools.text_wrap(content, wrap)
+            content = j.data.text.wrap(content, wrap)
 
             # flatten = True
         ind = indentchar * nspaces
@@ -603,7 +603,7 @@ class Text:
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
-        Tools._j.core.myenv.config will also be given to the format function
+        j.core.myenv.config will also be given to the format function
 
 
         for examples see text_replace method
@@ -614,12 +614,12 @@ class Text:
             content, removecomments=removecomments, remove_emptyline=True, findcomments=False
         )
         if replace:
-            content = Tools.text_replace(
+            content = j.data.text.replace(
                 content=content, args=args, executor=executor, text_strip=False, die_if_args_left=die_if_args_left
             )
         else:
             if colors and "{" in content:
-                for key, val in Tools._j.core.myenv.MYCOLORS.items():
+                for key, val in j.core.myenv.MYCOLORS.items():
                     content = content.replace("{%s}" % key, val)
 
         return content
@@ -702,7 +702,7 @@ class Text:
     #     return content
 
     @staticmethod
-    def getMacroCandidates(txt):
+    def macro_candidates_get(txt):
         """
         look for \{\{\}\} return as list
         """
@@ -745,7 +745,7 @@ class Text:
         return "s", Text.machinetext2str(string)
 
     @staticmethod
-    def parseArgs(args):
+    def parse_python_arguments(args):
         """
         @param args e.g.
             msg,f = 'f',g = 1, x=[1,2,3]
@@ -781,7 +781,7 @@ class Text:
         return amMethodArgs
 
     @staticmethod
-    def parseDefLine(line, parseArgs=True):
+    def parse_python_method(line, parseArgs=True):
         """
         will return name & args
         args is dict, with support for int, str, list, dict, float
@@ -801,7 +801,7 @@ class Text:
         amName = definition[4:].strip()
         args = args.strip()
         if parseArgs:
-            args = Text.parseArgs(args)
+            args = Text.parse_python_arguments(args)
         return amName, args
 
     @staticmethod
@@ -864,7 +864,7 @@ class Text:
         """
         look for {{}} in code and evaluate as python result is converted back to str
         """
-        candidates = Text.getMacroCandidates(code)
+        candidates = Text.macro_candidates_get(code)
         for item in candidates:
             if "{{" and "}}" in item:
                 item = item.strip("{{").strip("}}")
@@ -874,16 +874,16 @@ class Text:
                 raise Text._j.exceptions.RuntimeError(
                     "Could not execute code in Text._j.core.text.,%s\n%s. Error was:%s" % (item, code, e)
                 )
-            result = Text.pythonObjToStr(result, multiline=False).strip()
+            result = Text.transform_pythonobject_multiline(result, multiline=False).strip()
             code = code.replace(item, result)
         return code
 
     @staticmethod
-    def pythonObjToStr1line(obj):
-        return Text.pythonObjToStr(obj, False, canBeDict=False)
+    def transform_pythonobject_1line(obj):
+        return Text.transform_pythonobject_multiline(obj, False, canBeDict=False)
 
     @staticmethod
-    def pythonObjToStr(obj, multiline=True, canBeDict=True, partial=False):
+    def transform_pythonobject_multiline(obj, multiline=True, canBeDict=True, partial=False):
         """
         try to convert a python object to string representation works for None, bool, integer, float, dict, list
         """
@@ -928,12 +928,12 @@ class Text:
             if multiline:
                 resout = "\n"
                 for item in obj:
-                    resout += "    %s,\n" % Text.pythonObjToStr1line(item)
+                    resout += "    %s,\n" % Text.transform_pythonobject_1line(item)
                 resout = resout.rstrip().strip(",") + ",\n"
             else:
                 resout = "["
                 for item in obj:
-                    resout += "%s," % Text.pythonObjToStr1line(item)
+                    resout += "%s," % Text.transform_pythonobject_1line(item)
                 resout = resout.rstrip().strip(",") + "]"
 
             return resout
@@ -946,16 +946,16 @@ class Text:
                 keys = sorted(obj.keys())
                 for key in keys:
                     val = obj[key]
-                    val = Text.pythonObjToStr1line(val)
+                    val = Text.transform_pythonobject_1line(val)
                     # resout+="%s:%s, "%(key,val)
-                    resout += "    %s:%s,\n" % (key, Text.pythonObjToStr1line(val))
+                    resout += "    %s:%s,\n" % (key, Text.transform_pythonobject_1line(val))
                 resout = resout.rstrip().rstrip(",") + ",\n"
             else:
                 resout = ""
                 keys = sorted(obj.keys())
                 for key in keys:
                     val = obj[key]
-                    val = Text.pythonObjToStr1line(val)
+                    val = Text.transform_pythonobject_1line(val)
                     resout += "%s:%s," % (key, val)
                 resout = resout.rstrip().rstrip(",") + ","
             return resout
@@ -964,7 +964,7 @@ class Text:
             raise Text._j.exceptions.RuntimeError("Could not convert %s to string" % obj)
 
     @staticmethod
-    def replaceQuotes(value, replacewith):
+    def transform_quotes(value, replacewith):
         for item in re.findall(matchquote, value):
             value = value.replace(item, replacewith)
         return value
@@ -1202,3 +1202,4 @@ class Text:
         lexer = pygments.lexers.get_lexer_by_name(lexer)  # , stripall=True)
         colored = pygments.highlight(text, lexer, formatter)
         sys.stdout.write(colored)
+

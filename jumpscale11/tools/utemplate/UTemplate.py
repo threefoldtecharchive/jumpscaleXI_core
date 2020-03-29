@@ -9,7 +9,7 @@ class UTemplate:
     """
 
     def _init(self, **kwargs):
-        self._codegendir = j.core.tools.text_replace("{DIR_VAR}/codegen")
+        self._codegendir = j.data.text.replace("{DIR_VAR}/codegen")
         self.reset(destroyall=False)
 
     def reset(self, destroyall=True):
@@ -84,7 +84,7 @@ class UTemplate:
         else:
             # self._log_debug("write template:%s on dest:%s"%(path,dest))
             j.sal.fs.createDir(j.sal.fs.getDirName(dest))
-            j.sal.fs.writeFile(dest, txt)
+            j.sal.fs.file_write(dest, txt)
 
     def code_python_render(self, obj_key=None, path=None, text=None, dest=None, objForHash=None, name=None, **args):
         """
@@ -134,7 +134,7 @@ class UTemplate:
 
         render = False
         if dest_md5 is not None and j.sal.fs.exists(dest_md5) and j.sal.fs.exists(dest):
-            md5_ondisk = j.sal.fs.readFile(dest_md5)
+            md5_ondisk = j.sal.fs.file_read(dest_md5)
             if md5_ondisk != md5:
                 render = True
         elif not j.sal.fs.exists(dest):
@@ -145,9 +145,9 @@ class UTemplate:
             # means has not been rendered yet lets do
             out = t.render(j=j, DIRS=j.dirs, BASENAME=BASENAME, **args)
 
-            j.sal.fs.writeFile(dest, out)
+            j.sal.fs.file_write(dest, out)
             if dest_md5 is not None:
-                j.sal.fs.writeFile(dest_md5, md5)  # remember the md5
+                j.sal.fs.file_write(dest_md5, md5)  # remember the md5
         obj, changed = j.tools.codeloader.load(obj_key=obj_key, path=dest, md5=md5)
 
         self._hash_to_codeobj[md5] = obj
@@ -172,7 +172,7 @@ class UTemplate:
         if C is not None and write:
             if dest:
                 path = dest
-            j.sal.fs.writeFile(path, C)
+            j.sal.fs.file_write(path, C)
         return C
 
     def dir_render(
@@ -313,3 +313,4 @@ class UTemplate:
         assert res > 10000
 
         self.reset()
+

@@ -65,6 +65,7 @@ class JSDict(MutableMapping, BC.object):
 
         out += "{RESET}"
 
-        return j.core.tools.text_replace(out)
+        return j.data.text.replace(out)
 
     __str__ = __repr__
+

@@ -111,7 +111,7 @@ class Console:
         @rtype: tuple<number, string>
         """
 
-        message = j.core.tools.text_replace(message)
+        message = j.data.text.replace(message)
 
         if indent == 0 or indent is None:
             indent = self.indent
@@ -175,14 +175,14 @@ class Console:
             self._log_info(msg)
             # self._log_debug(msg,1)
 
-    def echoListItem(self, msg):
+    def print_list_item(self, msg):
         """
         Echo a list item
         @param msg: Message to display
         """
         self.echo(msg, withStar=True)
 
-    def echoListItems(self, messages, sort=False):
+    def print_list_items(self, messages, sort=False):
         """
         Echo a sequence (iterator, generator, list, set) as list items
 
@@ -196,29 +196,29 @@ class Console:
         if sort:
             messages.sort()
         for msg in messages:
-            self.echoListItem(msg)
+            self.print_list_item(msg)
 
-    def echoWithPrefix(self, message, prefix, withStar=False, indent=None):
+    def print_with_prefix(self, message, prefix, withStar=False, indent=None):
         """
         print a message which is formatted with a prefix
         """
         self.echo(message, prefix=prefix, withStar=withStar, indent=indent)
 
-    def echoListWithPrefix(self, messages, prefix):
+    def print_with_prefix_list(self, messages, prefix):
         """
         print messages
         """
         for message in messages:
-            self.echoWithPrefix(message, prefix, withStar=True)
+            self.print_with_prefix(message, prefix, withStar=True)
 
-    def echoDict(self, dictionary, withStar=False, indent=None):
+    def print_dict(self, dictionary, withStar=False, indent=None):
         for key in list(dictionary.keys()):
             try:
-                self.echoWithPrefix(str(dictionary[key]), key, withStar, indent)
+                self.print_with_prefix(str(dictionary[key]), key, withStar, indent)
             except BaseException:
                 raise j.exceptions.Input("Could not convert item of dictionary %s to string" % key, "console.echodict")
 
-    def transformDictToMessage(self, dictionary, withStar=False, indent=None):
+    def transform_dict_to_message(self, dictionary, withStar=False, indent=None):
         for key in list(dictionary.keys()):
             try:
                 self.format_message(str(dictionary[key]), key, withStar, indent)
@@ -239,7 +239,7 @@ class Console:
         if not j.application.interactive:
             raise j.exceptions.Input("Cannot use console in a non interactive mode, console.noninteractive")
 
-    def askPassword(self, question, confirm=True, regex=None, retry=-1, validate=None):
+    def ask_password(self, question, confirm=True, regex=None, retry=-1, validate=None):
         """Present a password input question to the user
 
         @param question: Password prompt message
@@ -256,7 +256,7 @@ class Console:
             question=question, confirm=confirm, regex=regex, retry=retry, validate=validate
         )
 
-    def askInteger(self, question, defaultValue=None, minValue=None, maxValue=None, retry=-1, validate=None):
+    def ask_integer(self, question, defaultValue=None, minValue=None, maxValue=None, retry=-1, validate=None):
         """Get an integer response on asked question
 
         @param question: Question need to get response on
@@ -300,11 +300,11 @@ class Console:
             retryCount = retryCount - 1
 
         raise j.exceptions.Value(
-            "Console.askInteger() failed: tried %d times but user didn't fill out a value that matches '%s'."
+            "Console.ask_integer() failed: tried %d times but user didn't fill out a value that matches '%s'."
             % (retry, response)
         )
 
-    def askYesNo(self, message="", default=None):
+    def ask_yes_no(self, message="", default=None):
         """Display a yes/no question and loop until a valid answer is entered
 
         @param message: Question message
@@ -339,7 +339,7 @@ class Console:
 
             self.echo("Illegal value. Press 'y' or 'n'.")
 
-    def askIntegers(self, question, invalid_message="invalid input please try again.", min=None, max=None):
+    def ask_integers(self, question, invalid_message="invalid input please try again.", min=None, max=None):
         """
         Ask the user for multiple integers
 
@@ -373,7 +373,7 @@ class Console:
         def invalid(l):
             return len(l) == 0 or (not all_between(l, min, max))
 
-        s = self.askString(question)
+        s = self.ask_string(question)
         if s.find("*") != -1:
             return ["*"]
         s = s.split(",")
@@ -384,7 +384,7 @@ class Console:
             parts = clean(f())
         return parts
 
-    def askChoice(self, choicearray, descr="", sort=True, maxchoice=60, height=40, autocomplete=False):
+    def ask_choice(self, choicearray, descr="", sort=True, maxchoice=60, height=40, autocomplete=False):
         """
         @param choicearray is list or dict, when dict key needs to be the object to return,
                the value of the dics is what needs to be returned, the key is the str representation
@@ -527,7 +527,7 @@ class Console:
                     self.echo("\n")
                     for choice in choicearray:
                         choice = str(choice)
-                        self.echoListItem(choice)
+                        self.print_list_item(choice)
                     self.echo("\n")
 
                 choicearray = choicearray2
@@ -574,11 +574,11 @@ class Console:
         for idx, section in enumerate(choicearray):
             self.echo("   %s: %s" % (idx + 1, section))
         self.echo("")
-        result = self.askInteger("   Select Nr", minValue=1, maxValue=idx + 1)
+        result = self.ask_integer("   Select Nr", minValue=1, maxValue=idx + 1)
 
         return valuearray[result - 1]
 
-    def askChoiceMultiple(self, choicearray, descr=None, sort=True):
+    def ask_choiceMultiple(self, choicearray, descr=None, sort=True):
         self._check_interactive()
         if not choicearray:
             return []
@@ -596,7 +596,7 @@ class Console:
             nr = nr + 1
             self.echo("   %s: %s" % (nr, section))
         self.echo("")
-        results = self.askIntegers(
+        results = self.ask_integers(
             '   Select Nr, use comma separation if more e.g. "1,4", * is all, 0 is None',
             "Invalid choice, please try again",
             min=0,
@@ -611,9 +611,9 @@ class Console:
             return [choicearray[i - 1] for i in results]
 
     # @staticmethod
-    # def ask_choices(msg, choices=[], default=None):
-    #     Tools._check_interactive()
-    #     msg = Tools.text_strip(msg)
+    # def ask_choice(msg, choices=[], default=None):
+    #     j.tools.console.check_interactive()
+    #     msg = j.data.text.strip(msg)
     #     print(msg)
     #     if "\n" in msg:
     #         print()
@@ -627,7 +627,7 @@ class Console:
     #         mychoice = input("make your choice (%s): " % choices_txt)
     #     return mychoice
 
-    def askMultiline(self, question, escapeString="."):
+    def ask_multiline(self, question, escapeString="."):
         """
         Ask the user a question that needs a multi-line answer.
 
@@ -651,11 +651,11 @@ class Console:
         lines.append("")  # Forces end with newline
         return "\n".join(lines)
 
-    # def getOutput(self):
+    # def output_get(self):
     #     pass  # TODO: Implement this method
     #     return ""
 
-    def hideOutput(self, reset=False):
+    def output_hide(self, reset=False):
         return
         # TODO: *3
         # setup the environment
@@ -666,10 +666,10 @@ class Console:
         if self.stderr is None or reset:
             self.stderr = TextIOWrapper(BytesIO(), sys.stderr.encoding)
 
-    def printOutput(self):
+    def output_print(self):
         pass
 
-    def enableOutput(self):
+    def output_enable(self):
         # restore stdout
         if self.stdout is not None:
             self.stdout.close()
@@ -678,7 +678,7 @@ class Console:
         sys.stdout = self._old_stdout
         sys.stderr = self._old_stderr
 
-    def showArray(self, array, header=True):
+    def print_array(self, array, header=True):
         choices = self._array2list(array, header)
         out = ""
         for line in choices:
@@ -712,10 +712,10 @@ class Console:
         choices.sort()
         return choices
 
-    def askArrayRow(self, array, header=True, descr="", returncol=None):
+    def ask_array_row(self, array, header=True, descr="", returncol=None):
         self._check_interactive()
         choices = self._array2list(array, header)
-        result = self.askChoiceMultiple(choices, descr="")
+        result = self.ask_choiceMultiple(choices, descr="")
         results = []
         for item in result:
             if returncol is None:
@@ -739,13 +739,13 @@ class Console:
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
-        Tools._check_interactive()
-        return Tools.ask_choices(msg, "y,n", default=default) in ["y", ""]
+        j.tools.console.check_interactive()
+        return j.core.tools.ask_choice(msg, "y,n", default=default) in ["y", ""]
 
     @staticmethod
     def _check_interactive():
-        if not Tools._j.core.myenv.interactive:
-            raise Tools.exceptions.Base("Cannot use console in a non interactive mode.")
+        if not j.core.myenv.interactive:
+            raise j.exceptions.Base("Cannot use console in a non interactive mode.")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -761,7 +761,7 @@ class Console:
         @returns: Password provided by the user
         @rtype: string
         """
-        Tools._check_interactive()
+        j.tools.console.check_interactive()
 
         import getpass
 
@@ -788,15 +788,15 @@ class Console:
             if failed:
                 print("Invalid password!")
                 retryCount = retryCount - 1
-        raise Tools.exceptions.Base(
-            "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
+        raise j.exceptions.Base(
+            "Console.ask_password() failed: tried %s times but user didn't fill out a value that matches '%s'."
             % (retry, regex)
         )
 
     # @staticmethod
     # def ask_string(msg, default=None):
-    #     Tools._check_interactive()
-    #     msg = Tools.text_strip(msg)
+    #     j.tools.console.check_interactive()
+    #     msg = j.data.text.strip(msg)
     #     print(msg)
     #     if "\n" in msg:
     #         print()
@@ -805,7 +805,7 @@ class Console:
     #         txt = default
     #     return txt
     #
-    def askString(self, question, defaultparam="", regex=None, retry=-1, validate=None):
+    def ask_string(self, question, defaultparam="", regex=None, retry=-1, validate=None):
         """Get a string response on a question
 
         @param question: Question to respond to
@@ -839,6 +839,6 @@ class Console:
                 self.echo("Please insert a valid value!")
                 retryCount = retryCount - 1
         raise j.exceptions.Value(
-            "Console.askString() failed: tried %d times but user didn't fill out a value that matches '%s'."
+            "Console.ask_string() failed: tried %d times but user didn't fill out a value that matches '%s'."
             % (retry, regex)
         )

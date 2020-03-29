@@ -100,19 +100,19 @@ class InteractiveText:
 
             # print "type:'%s'"%ttype
             if ttype == "str":
-                result = j.tools.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
+                result = j.tools.console.ask_string(question=descr, defaultparam=default, regex=regex, retry=retry)
 
             elif ttype == "password":
-                result = j.tools.console.askPassword(question=descr, confirm=False)
+                result = j.tools.console.ask_password(question=descr, confirm=False)
 
             elif ttype == "list":
-                result = self._j.tools.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
+                result = self._j.tools.console.ask_string(question=descr, defaultparam=default, regex=regex, retry=retry)
 
             elif ttype == "multiline":
-                result = self._j.tools.console.askMultiline(question=descr)
+                result = self._j.tools.console.ask_multiline(question=descr)
 
             elif ttype == "float":
-                result = self._j.tools.console.askString(question=descr, defaultparam=default, regex=None)
+                result = self._j.tools.console.ask_string(question=descr, defaultparam=default, regex=None)
                 # check getFloat
                 try:
                     result = float(result)
@@ -133,14 +133,14 @@ class InteractiveText:
 
                 if not default:
                     default = None
-                result = self._j.tools.console.askInteger(
+                result = self._j.tools.console.ask_integer(
                     question=descr, defaultValue=default, minValue=minValue, maxValue=maxValue, retry=retry
                 )
 
             elif ttype == "bool":
                 if descr != "":
                     self._log_info(descr)
-                result = self._j.tools.console.askYesNo()
+                result = self._j.tools.console.ask_yes_no()
                 if result:
                     result = True
                 else:
@@ -154,9 +154,9 @@ class InteractiveText:
                         "When type is dropdown in ask, then dropdownvals needs to be specified as well."
                     )
                 choicearray = [item.strip() for item in dropdownvals.split(",")]
-                result = self._j.tools.console.askChoice(choicearray, descr=descr, sort=True)
+                result = self._j.tools.console.ask_choice(choicearray, descr=descr, sort=True)
             elif ttype == "dict":
-                rawresult = self._j.tools.console.askMultiline(question=descr)
+                rawresult = self._j.tools.console.ask_multiline(question=descr)
                 result = "\n"
                 for line in rawresult.splitlines():
                     result += "    %s,\n" % line.strip().strip(",")
@@ -171,3 +171,4 @@ class InteractiveText:
         # if endlf==False:
         out = out[:-1]
         return ttype, out
+

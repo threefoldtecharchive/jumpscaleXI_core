@@ -114,7 +114,7 @@ class ExecutorBase(j.baseclasses.object_config):
 
         performance is +100k per sec
         """
-        res = j.core.tools.text_replace(content=content, args=args, executor=self)
+        res = j.data.text.replace(content=content, args=args, executor=self)
         if "{" in res:
             j.shell()
         return res
@@ -252,7 +252,7 @@ class ExecutorBase(j.baseclasses.object_config):
 
         if j.sal.fs.exists(cmd):
             ext = j.sal.fs.getFileExtension(cmd).lower()
-            cmd = j.sal.fs.readFile(cmd)
+            cmd = j.sal.fs.file_read(cmd)
             if python is None and jumpscale is None:
                 if ext == "py":
                     python = True
@@ -480,7 +480,7 @@ class ExecutorBase(j.baseclasses.object_config):
         export
         echo --TEXT--
         """
-        C = j.core.tools.text_strip(C)
+        C = j.data.text.strip(C)
         rc, out, err = self.execute(C, showout=False, interactive=False, replace=False)
         res = {}
         state = ""
@@ -631,19 +631,19 @@ class ExecutorBase(j.baseclasses.object_config):
         assert ex.path_isfile("/tmp/1re")
 
         path = ex.download("/tmp/1re", "/tmp/something.txt")
-        assert j.sal.fs.readFile("/tmp/something.txt").strip() == "a"
+        assert j.sal.fs.file_read("/tmp/something.txt").strip() == "a"
         path = ex.upload("/tmp/something.txt", "/tmp/2re")
 
         assert ex.file_read("/tmp/2re").strip() == "a"
 
-        assert j.sal.fs.readFile("/tmp/something.txt").strip() == "a"
+        assert j.sal.fs.file_read("/tmp/something.txt").strip() == "a"
         j.sal.fs.remove("/tmp/something.txt")
 
         j.sal.fs.createDir("/tmp/8888")
         j.sal.fs.createDir("/tmp/8888/5")
-        j.sal.fs.writeFile("/tmp/8888/1.txt", "a")
-        j.sal.fs.writeFile("/tmp/8888/2.txt", "a")
-        j.sal.fs.writeFile("/tmp/8888/5/3.txt", "a")
+        j.sal.fs.file_write("/tmp/8888/1.txt", "a")
+        j.sal.fs.file_write("/tmp/8888/2.txt", "a")
+        j.sal.fs.file_write("/tmp/8888/5/3.txt", "a")
 
         path = ex.upload("/tmp/8888", "/tmp/8889")
 
@@ -674,3 +674,4 @@ class ExecutorBase(j.baseclasses.object_config):
             ptype = self.platformtype
 
         self._log_info("TEST for executor done")
+

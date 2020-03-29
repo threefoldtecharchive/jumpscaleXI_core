@@ -26,15 +26,15 @@ class OSXInstaller:
 
     @staticmethod
     def brew_install():
-        if not Tools.cmd_installed("brew"):
+        if not j.core.tools.cmd_installed("brew"):
             cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
-            Tools.execute(cmd, interactive=True)
+            j.core.tools.execute(cmd, interactive=True)
 
     @staticmethod
     def brew_uninstall():
         j.core.myenv.init()
         cmd = 'ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
-        Tools.execute(cmd, interactive=True)
+        j.core.tools.execute(cmd, interactive=True)
         toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
@@ -43,4 +43,5 @@ class OSXInstaller:
         sudo rm -rf /usr/local/FlashcardService/
         sudo rm -rf /usr/local/texlive/
         """
-        Tools.execute(toremove, interactive=True)
+        j.core.tools.execute(toremove, interactive=True)
+

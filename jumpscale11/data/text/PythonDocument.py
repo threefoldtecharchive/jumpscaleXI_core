@@ -24,7 +24,7 @@ class CommentBlock(Comment):
 
 class PythonClass:
     def __init__(self,doc,firstline,parent=None):
-        self.name, self.args = j.data.text.parseDefLine(firstline)
+        self.name, self.args = j.data.text.parse_python_method(firstline)
         self.parts = []
         self.parent=parent
         j.shell()
@@ -34,7 +34,7 @@ class PythonMethod:
 
     def __init__(self,doc,firstline,parent=None):
         self.abstract = False
-        self.name, self.args = j.data.text.parseDefLine(firstline)
+        self.name, self.args = j.data.text.parse_python_method(firstline)
         self.parts = []
         self.parent = parent
         j.shell()
@@ -62,3 +62,4 @@ class PythonDocument:
                 j.shell()
             elif isinstance(PythonMethod,lastpart):
                 j.shell()
+

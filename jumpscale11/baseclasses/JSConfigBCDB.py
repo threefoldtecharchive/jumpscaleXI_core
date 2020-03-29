@@ -160,11 +160,11 @@ class JSConfigBCDB(JSConfigBCDBBase):
         :return:
 
         """
-        path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml" % self.__class__._location)
+        path = j.data.text.replace("{DIR_TEMP}/js_baseconfig_%s.toml" % self.__class__._location)
         data_in = self._data._toml
-        j.sal.fs.writeFile(path, data_in)
+        j.sal.fs.file_write(path, data_in)
         j.core.tools.file_edit(path)
-        data_out = j.sal.fs.readFile(path)
+        data_out = j.sal.fs.file_read(path)
         if data_in != data_out:
             self._log_debug(
                 "'%s' instance '%s' has been edited (changed)" % (self.__parent.__jslocation__, self._data.name)
@@ -188,5 +188,6 @@ class JSConfigBCDB(JSConfigBCDBBase):
     def __repr__(self):
         # out = "{BLUE}# JSXOBJ:{RESET}\n"
         out = "{RESET}\n"
-        ansi_out = j.core.tools.text_replace(out, die_if_args_left=False).rstrip()
+        ansi_out = j.data.text.replace(out, die_if_args_left=False).rstrip()
         return ansi_out + "\n" + self._data.__repr__()
+

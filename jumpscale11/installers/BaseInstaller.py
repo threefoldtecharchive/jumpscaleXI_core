@@ -301,7 +301,7 @@ class BaseInstaller:
         [ -d "/sandbox/code/github" ] && rsync -rav --exclude '__pycache__' --exclude '.git' --exclude '.idea' --exclude '*.pyc' /sandbox/code/github/threefoldtech/ /sandbox/code_org/
 
         """
-        return j.core.tools.text_strip(CMD, replace=False)
+        return j.data.text.strip(CMD, replace=False)
 
     @staticmethod
     def cleanup_script_get():
@@ -348,7 +348,7 @@ class BaseInstaller:
             sed -i -r 's/^SECRET =.*/SECRET =/' /sandbox/cfg/jumpscale_config.toml
         fi 
         """
-        return j.core.tools.text_strip(CMD, replace=False)
+        return j.data.text.strip(CMD, replace=False)
 
     @staticmethod
     def cleanup_script_developmentenv_get():
@@ -377,4 +377,5 @@ class BaseInstaller:
         rm -rf /usr/lib/gcc        
 
         """
-        return j.core.tools.text_strip(CMD, replace=False)
+        return j.data.text.strip(CMD, replace=False)
+

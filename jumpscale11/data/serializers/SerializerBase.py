@@ -6,10 +6,10 @@ JSBASE = j.baseclasses.object
 class SerializerBase(j.baseclasses.object):
     def dump(self, filepath, obj):
         data = self.dumps(obj)
-        j.sal.fs.writeFile(filepath, data)
+        j.sal.fs.file_write(filepath, data)
 
     def load(self, path):
-        b = j.sal.fs.readFile(path, binary=True)
+        b = j.sal.fs.file_read(path, binary=True)
         try:
             r = self.loads(b)
         except Exception as e:
@@ -36,3 +36,4 @@ class SerializerBase(j.baseclasses.object):
 #
 #     def loads(self, data):
 #         raise j.exceptions.Base("should not come here")
+

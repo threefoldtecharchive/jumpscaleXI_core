@@ -839,7 +839,7 @@ class JSBase:
 
         out += "{RESET}"
 
-        out = j.core.tools.text_replace(out, die_if_args_left=False)
+        out = j.data.text.replace(out, die_if_args_left=False)
         return out
 
     def __str__(self):
@@ -849,3 +849,4 @@ class JSBase:
         :return:
         """
         return "jsxobj:%s:%s" % (self.__class__._location, self.__class__.__name__)
+

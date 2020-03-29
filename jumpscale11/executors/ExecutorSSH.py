@@ -98,7 +98,7 @@ class ExecutorSSH:
 
     @property
     def platformtype(self):
-        raise Tools.exceptions("not implemented")
+        raise j.core.tools.exceptions("not implemented")
 
     def file_read(self, path, binary=False):
         j.core.tools.log("file read:%s" % path)
@@ -106,10 +106,10 @@ class ExecutorSSH:
             rc, out, err = self.execute("cat %s" % path, showout=False, interactive=False)
             return out
         else:
-            p = Tools._file_path_tmp_get("data")
+            p = j.core.tools._file_path_tmp_get("data")
             self.download(path, dest=p)
-            data = Tools.file_read(p)
-            Tools.delete(p)
+            data = j.core.tools.file_read(p)
+            j.core.tools.delete(p)
             return data
 
     def file_write(self, path, content, mode=None, owner=None, group=None, showout=True):
@@ -126,10 +126,10 @@ class ExecutorSSH:
         #     cmd = 'echo -n -e "%s" > %s' % (content, path)
         #     self.execute(cmd)
         # else:
-        temp = Tools._file_path_tmp_get(ext="data")
-        Tools.file_write(temp, content)
+        temp = j.core.tools._file_path_tmp_get(ext="data")
+        j.core.tools.file_write(temp, content)
         self.upload(temp, path)
-        Tools.delete(temp)
+        j.core.tools.delete(temp)
         cmd = ""
         if mode:
             cmd += "chmod %s %s && " % (mode, path)
@@ -146,7 +146,7 @@ class ExecutorSSH:
     @property
     def uid(self):
         if self._id is None:
-            raise Tools.exceptions.Base("self._id cannot be None")
+            raise j.exceptions.Base("self._id cannot be None")
         return self._id
 
     def find(self, path):
@@ -154,7 +154,7 @@ class ExecutorSSH:
         if rc > 0:
             if err.lower().find("no such file") != -1:
                 return []
-            raise Tools.exceptions.Base("could not find:%s \n%s" % (path, err))
+            raise j.exceptions.Base("could not find:%s \n%s" % (path, err))
         res = []
         for line in out.split("\n"):
             if line.strip() == path:
@@ -198,17 +198,17 @@ class ExecutorSSH:
         return self.config["state"]
 
     def state_exists(self, key):
-        key = Tools.text_strip_to_ascii_dense(key)
+        key = j.data.text.strip_to_ascii_dense(key)
         return key in self.state
 
     def state_set(self, key, val=None, save=True):
-        key = Tools.text_strip_to_ascii_dense(key)
+        key = j.data.text.strip_to_ascii_dense(key)
         if save or key not in self.state or self.state[key] != val:
             self.state[key] = val
             self.save()
 
     def state_get(self, key, default_val=None):
-        key = Tools.text_strip_to_ascii_dense(key)
+        key = j.data.text.strip_to_ascii_dense(key)
         if key not in self.state:
             if default_val:
                 self.state[key] = default_val
@@ -219,7 +219,7 @@ class ExecutorSSH:
             return self.state[key]
 
     def state_delete(self, key):
-        key = Tools.text_strip_to_ascii_dense(key)
+        key = j.data.text.strip_to_ascii_dense(key)
         if key in self.state:
             self.state.pop(key)
             self.save()
@@ -291,7 +291,7 @@ class ExecutorSSH:
                 res[varname.upper()] = val
 
         if res["CFG_JUMPSCALE"].strip() != "":
-            rconfig = Tools.config_load(content=res["CFG_JUMPSCALE"])
+            rconfig = j.core.tools.config_load(content=res["CFG_JUMPSCALE"])
             res["CFG_JUMPSCALE"] = rconfig
         else:
             res["CFG_JUMPSCALE"] = {}
@@ -344,7 +344,7 @@ class ExecutorSSH:
         if not args:
             args = {}
 
-        tempfile, cmd = Tools._cmd_process(
+        tempfile, cmd = j.core.tools._cmd_process(
             cmd=cmd,
             python=python,
             jumpscale=jumpscale,
@@ -356,13 +356,13 @@ class ExecutorSSH:
             executor=self,
         )
 
-        Tools._cmd_check(cmd)
+        j.core.tools._cmd_check(cmd)
 
         if interactive:
             cmd2 = "ssh -oStrictHostKeyChecking=no -t root@%s -A -p %s '%s'" % (self.addr, self.port, cmd)
         else:
             cmd2 = "ssh -oStrictHostKeyChecking=no root@%s -A -p %s '%s'" % (self.addr, self.port, cmd)
-        r = Tools._execute(
+        r = j.core.tools._execute(
             cmd2,
             interactive=interactive,
             showout=showout,
@@ -372,7 +372,7 @@ class ExecutorSSH:
             original_command=original_command,
         )
         if tempfile:
-            Tools.delete(tempfile)
+            j.core.tools.delete(tempfile)
         return r
 
     def upload(
@@ -405,19 +405,19 @@ class ExecutorSSH:
         else:
             dest = self._replace(dest)
         if not os.path.exists(source):
-            raise Tools.exceptions.Input("path '%s' not found" % source)
+            raise j.exceptions.Input("path '%s' not found" % source)
 
         if os.path.isfile(source):
             if createdir:
                 destdir = os.path.dirname(source)
                 self.dir_ensure(destdir)
             cmd = "scp -P %s %s root@%s:%s" % (self.port, source, self.addr, dest)
-            Tools._execute(cmd, showout=True, interactive=False)
+            j.core.tools._execute(cmd, showout=True, interactive=False)
             return
-        raise Tools.exceptions.RuntimeError("not implemented")
+        raise j.exceptions.RuntimeError("not implemented")
         dest = self._replace(dest)
         if dest[0] != "/":
-            raise Tools.exceptions.RuntimeError("need / in beginning of dest path")
+            raise j.exceptions.RuntimeError("need / in beginning of dest path")
         if source[-1] != "/":
             source += "/"
         if dest[-1] != "/":
@@ -440,13 +440,13 @@ class ExecutorSSH:
         source = self._replace(source)
 
         sourcedir = os.path.dirname(source)
-        Tools.dir_ensure(sourcedir)
+        j.core.tools.dir_ensure(sourcedir)
 
         destdir = os.path.dirname(dest)
-        Tools.dir_ensure(destdir)
+        j.core.tools.dir_ensure(destdir)
 
         cmd = "scp -P %s root@%s:%s %s" % (self.port, self.addr, source, dest)
-        Tools._execute(cmd, showout=True, interactive=False)
+        j.core.tools._execute(cmd, showout=True, interactive=False)
 
     def kosmos(self):
         self.jsxexec("j.shell()")
@@ -461,3 +461,4 @@ class ExecutorSSH:
     def state_reset(self):
         self.config["state"] = {}
         self.save()
+

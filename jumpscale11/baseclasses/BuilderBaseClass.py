@@ -295,18 +295,18 @@ class BuilderBaseClass(JSBase):
 
     def _profile_sandbox_set(self):
 
-        self._bash = j.tools.bash.get(j.core.tools.text_replace("{DIR_BASE}"))
+        self._bash = j.tools.bash.get(j.data.text.replace("{DIR_BASE}"))
 
         self.profile.state = "sandbox"
 
         # cannot manipuate env.sh in sandbox, should be set properly by design
-        if self.profile.profile_path != j.core.tools.text_replace("{DIR_BASE}/env.sh"):
-            self.profile.path_add(j.core.tools.text_replace("{DIR_BASE}/bin"))
+        if self.profile.profile_path != j.data.text.replace("{DIR_BASE}/env.sh"):
+            self.profile.path_add(j.data.text.replace("{DIR_BASE}/bin"))
 
             self.profile.env_set("PYTHONHTTPSVERIFY", 0)
 
-            self.profile.env_set_part("PYTHONPATH", j.core.tools.text_replace("{DIR_BASE}/lib"))
-            self.profile.env_set_part("PYTHONPATH", j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale"))
+            self.profile.env_set_part("PYTHONPATH", j.data.text.replace("{DIR_BASE}/lib"))
+            self.profile.env_set_part("PYTHONPATH", j.data.text.replace("{DIR_BASE}/lib/jumpscale"))
 
             self.profile.env_set("LC_ALL", "en_US.UTF-8")
             self.profile.env_set("LANG", "en_US.UTF-8")
@@ -341,7 +341,7 @@ class BuilderBaseClass(JSBase):
         for key, item in self.__dict__.items():
             if key.upper() == key:
                 args[key] = item
-        res = j.core.tools.text_replace(content=txt, args=args, text_strip=True)
+        res = j.data.text.replace(content=txt, args=args, text_strip=True)
         return res
 
     def _execute(self, cmd, die=True, args={}, timeout=3600, replace=True, showout=True, interactive=False, retry=None):
@@ -371,7 +371,7 @@ class BuilderBaseClass(JSBase):
             if cmd.find("set -xe") == -1 and cmd.find("set -e") == -1:
                 cmd = "set -ex\n%s" % (cmd)
 
-        j.sal.fs.writeFile(path, contents=cmd)
+        j.sal.fs.file_write(path, contents=cmd)
 
         rc, res, out = j.sal.process.execute(
             "bash %s" % path,
@@ -447,7 +447,7 @@ class BuilderBaseClass(JSBase):
         """
         path = self._replace(path)
         txt = self._replace(txt)
-        j.sal.fs.writeFile(path, txt)
+        j.sal.fs.file_write(path, txt)
 
     def _read(self, location):
         """
@@ -627,3 +627,4 @@ class BuilderBaseClass(JSBase):
 
         """
         raise j.exceptions.Base("not implemented")
+
