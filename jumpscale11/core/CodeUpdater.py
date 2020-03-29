@@ -182,7 +182,6 @@ class CodeFixer:
 
     def _fix_file(self, path):
         if path.name.find("CodeUpdater") != -1:
-            pu.db
             return
         if "." not in path.name:
             return
