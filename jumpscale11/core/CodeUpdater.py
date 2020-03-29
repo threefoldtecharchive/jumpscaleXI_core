@@ -181,6 +181,13 @@ class CodeFixer:
         return part
 
     def _fix_file(self, path):
+        if path.name.find("CodeUpdater") != -1:
+            return
+        if "." not in path.name:
+            return
+        ext = path.name.split(".")[-1].lower()
+        if not ext in ["py", "md", "txt"]:
+            return
         content0 = path.read_text()
         for i in range(3):
             content1 = self._fix_content(content0)
