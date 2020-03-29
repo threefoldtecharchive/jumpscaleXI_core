@@ -185,7 +185,7 @@ class CodeFixer:
         for i in range(3):
             content1 = self._fix_content(content0)
         if content1.strip() != content0.strip():
-            pu.db
+            path.write_text(content1)
 
     def walk(self, path=None, file_method=None):
 
