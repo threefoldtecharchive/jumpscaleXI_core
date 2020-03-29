@@ -9,7 +9,7 @@ class DockerFactory:
         will check if we are in a docker
         :return:
         """
-        rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
+        rc, out, _ = j.core.tools.execute("cat /proc/1/cgroup", die=False, showout=False)
         if rc == 0 and out.find("/docker/") != -1:
             return True
         return False
@@ -17,23 +17,23 @@ class DockerFactory:
     @staticmethod
     def init(name=None):
         if not DockerFactory._init:
-            rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
+            rc, out, _ = j.core.tools.execute("cat /proc/1/cgroup", die=False, showout=False)
             if rc == 0 and out.find("/docker/") != -1:
                 # nothing to do we are in docker already
                 return
 
             j.core.myenv.init()
 
-            if MyEnvplatform == "linux" and not Tools.cmd_installed("docker"):
+            if MyEnvplatform == "linux" and not j.core.tools.cmd_installed("docker"):
                 UbuntuInstaller.docker_install()
                 j.core.myenv._cmd_installed["docker"] = shutil.which("docker")
 
-            if not Tools.cmd_installed("docker"):
-                raise Tools.exceptions.Operations("Could not find Docker installed")
+            if not j.core.tools.cmd_installed("docker"):
+                raise j.exceptions.Operations("Could not find Docker installed")
 
             DockerFactory._init = True
-            cdir = Tools.text_replace("{DIR_BASE}/var/containers")
-            Tools.dir_ensure(cdir)
+            cdir = j.data.text.replace("{DIR_BASE}/var/containers")
+            j.core.tools.dir_ensure(cdir)
             for name_found in os.listdir(cdir):
                 if not os.path.isdir(os.path.join(cdir, name_found)):
                     # https://github.com/threefoldtech/jumpscaleX_core/issues/297
@@ -75,13 +75,13 @@ class DockerFactory:
 
     @staticmethod
     def containers_running():
-        names = Tools.execute("docker ps --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
+        names = j.core.tools.execute("docker ps --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
         names = [i.strip("\"'") for i in names if i.strip() != ""]
         return names
 
     @staticmethod
     def containers_names():
-        names = Tools.execute("docker container ls -a --format='{{json .Names}}'", showout=False, replace=False)[
+        names = j.core.tools.execute("docker container ls -a --format='{{json .Names}}'", showout=False, replace=False)[
             1
         ].split("\n")
         names = [i.strip("\"'") for i in names if i.strip() != ""]
@@ -106,7 +106,7 @@ class DockerFactory:
 
     @staticmethod
     def image_names():
-        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'", showout=False, replace=False)[
+        names = j.core.tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'", showout=False, replace=False)[
             1
         ].split("\n")
         res = []
@@ -132,7 +132,7 @@ class DockerFactory:
     def image_remove(name):
         if name in DockerFactory.image_names():
             j.core.tools.log("remove container:%s" % name)
-            Tools.execute("docker rmi -f %s" % name)
+            j.core.tools.execute("docker rmi -f %s" % name)
 
     @staticmethod
     def reset(images=True):
@@ -148,16 +148,16 @@ class DockerFactory:
             d.delete()
 
         # will get all images based on id
-        names = Tools.execute("docker images --format='{{.ID}}'", showout=False, replace=False)[1].split("\n")
+        names = j.core.tools.execute("docker images --format='{{.ID}}'", showout=False, replace=False)[1].split("\n")
         for image_id in names:
             if image_id:
-                Tools.execute("docker rmi -f %s" % image_id)
+                j.core.tools.execute("docker rmi -f %s" % image_id)
 
-        Tools.delete(Tools.text_replace("{DIR_BASE}/var/containers"))
+        j.core.tools.delete(j.data.text.replace("{DIR_BASE}/var/containers"))
 
     # @staticmethod
     # def get_container_port_binding(container_name="3obt", port="9001/udp"):
-    #     ports_bindings = Tools.execute(
+    #     ports_bindings = j.core.tools.execute(
     #         "docker inspect {container_name} --format={data}".format(
     #             container_name=container_name, data="'{{json .HostConfig.PortBindings}}'"
     #         ),
@@ -168,7 +168,7 @@ class DockerFactory:
     #     all_ports_data = json.loads(ports_bindings[1])
     #     port_binding_data = all_ports_data.get(port, None)
     #     if not port_binding_data:
-    #         raise Tools.exceptions.Input(
+    #         raise j.exceptions.Input(
     #             f"Error happened during parsing the binding ports data from container {conitainer_name} and port {port}"
     #         )
     #
@@ -186,7 +186,7 @@ class DockerFactory:
 
     @staticmethod
     def get_container_ip_address(container_name="3bot"):
-        container_ip = Tools.execute(
+        container_ip = j.core.tools.execute(
             "docker inspect {container_name} --format={data}".format(
                 container_name=container_name, data="'{{json .NetworkSettings.Networks.bridge.IPAddress}}'"
             ),
@@ -194,7 +194,7 @@ class DockerFactory:
             replace=False,
         )[1].split("\n")
         if not container_ip:
-            raise Tools.exceptions.Input(
+            raise j.exceptions.Input(
                 f"Error happened during parsing the container {conitainer_name} ip address data "
             )
         # Get the data in the required format
@@ -228,15 +228,15 @@ class DockerConfig:
         self.name = name
         self.ports = ports
 
-        self.path_vardir = Tools.text_replace("{DIR_BASE}/var/containers/{NAME}", args={"NAME": name})
-        Tools.dir_ensure(self.path_vardir)
+        self.path_vardir = j.data.text.replace("{DIR_BASE}/var/containers/{NAME}", args={"NAME": name})
+        j.core.tools.dir_ensure(self.path_vardir)
         self.path_config = "%s/docker_config.toml" % (self.path_vardir)
         # self.wireguard_pubkey
 
         if delete:
-            Tools.delete(self.path_vardir)
+            j.core.tools.delete(self.path_vardir)
 
-        if not Tools.exists(self.path_config):
+        if not j.core.tools.exists(self.path_config):
 
             self.portrange = None
 
@@ -267,12 +267,12 @@ class DockerConfig:
             if i in existingports:
                 continue
             port_to_check = 9000 + i * 10
-            if not Tools.tcp_port_connection_test(ipaddr="localhost", port=port_to_check):
+            if not j.core.tools.tcp_port_connection_test(ipaddr="localhost", port=port_to_check):
                 self.portrange = i
                 print(" - SSH PORT ON: %s" % port_to_check)
                 return
         if not self.portrange:
-            raise Tools.exceptions.Input("cannot find tcp port range for docker")
+            raise j.exceptions.Input("cannot find tcp port range for docker")
         self.sshport = 9000 + int(self.portrange) * 10
 
     def reset(self):
@@ -280,7 +280,7 @@ class DockerConfig:
         erase the past config
         :return:
         """
-        Tools.delete(self.path_vardir)
+        j.core.tools.delete(self.path_vardir)
         self.load()
 
     def done_get(self, name):
@@ -319,10 +319,10 @@ class DockerConfig:
         self.save()
 
     def load(self):
-        if not Tools.exists(self.path_config):
-            raise Tools.exceptions.JSBUG("could not find config path for container:%s" % self.path_config)
+        if not j.core.tools.exists(self.path_config):
+            raise j.exceptions.JSBUG("could not find config path for container:%s" % self.path_config)
 
-        r = Tools.config_load(self.path_config, keys_lower=True)
+        r = j.core.tools.config_load(self.path_config, keys_lower=True)
         ports = r.pop("ports", None)
         if ports:
             self.ports = json.loads(ports)
@@ -355,7 +355,7 @@ class DockerConfig:
     def save(self):
         data = self.__dict__.copy()
         data["ports"] = json.dumps(data["ports"])
-        Tools.config_save(self.path_config, data)
+        j.core.tools.config_save(self.path_config, data)
         assert isinstance(self.portrange, int)
         self.load()
 
@@ -373,9 +373,9 @@ class DockerContainer:
         if codedir not specified will use {DIR_BASE}/code
         """
         if name == "shared":
-            raise Tools.exceptions.JSBUG("should never be the shared obj")
+            raise j.exceptions.JSBUG("should never be the shared obj")
         if not DockerFactory._init:
-            raise Tools.exceptions.JSBUG("make sure to call DockerFactory.init() bedore getting a container")
+            raise j.exceptions.JSBUG("make sure to call DockerFactory.init() bedore getting a container")
 
         DockerFactory._dockers[name] = self
 
@@ -394,7 +394,7 @@ class DockerContainer:
             j.core.myenv.sshagent.key_default_name  # means we will load ssh-agent and help user to load it properly
 
         if len(j.core.myenv.sshagent.keys_list()) == 0:
-            raise Tools.exceptions.Base("Please load your ssh-agent with a key!")
+            raise j.exceptions.Base("Please load your ssh-agent with a key!")
 
         self._wireguard = None
         self._executor = None
@@ -436,7 +436,7 @@ class DockerContainer:
         returns True if the container is defined on the filesystem with the config file
         :return:
         """
-        if Tools.exists(self._path):
+        if j.core.tools.exists(self._path):
             return True
 
     @property
@@ -504,11 +504,11 @@ class DockerContainer:
 
         """
         if not self.container_exists_config:
-            raise Tools.exceptions.Operations("ERROR: cannot find docker with name:%s, cannot start" % self.name)
+            raise j.exceptions.Operations("ERROR: cannot find docker with name:%s, cannot start" % self.name)
 
         if pull:
             # lets make sure we have the latest image, ONLY DO WHEN FORCED, NOT STD
-            Tools.execute(f"docker image pull {image}", interactive=True)
+            j.core.tools.execute(f"docker image pull {image}", interactive=True)
             stop = True  # means we need to stop now, because otherwise we can't know we start from right image
 
         if delete:
@@ -549,7 +549,7 @@ class DockerContainer:
             -v {DIR_CODE}:/sandbox/code \
             -v {DIR_BASE}/var/containers/shared:/sandbox/myhost
             """
-            MOUNTS = Tools.text_strip(MOUNTS)
+            MOUNTS = j.data.text.strip(MOUNTS)
         else:
             MOUNTS = f"-v {DIR_BASE}/var/containers/shared:/sandbox/myhost"
 
@@ -565,12 +565,12 @@ class DockerContainer:
         --device=/dev/net/tun --cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=DAC_OVERRIDE \
         --cap-add=DAC_READ_SEARCH {MOUNTS} {image} {self.config.startupcmd}"
 
-        run_cmd = Tools.text_strip(run_cmd)
-        run_cmd2 = Tools.text_replace(re.sub("\s+", " ", run_cmd))
+        run_cmd = j.data.text.strip(run_cmd)
+        run_cmd2 = j.data.text.replace(re.sub("\s+", " ", run_cmd))
 
         print(" - Docker machine gets created: ")
         print(run_cmd2)
-        Tools.execute(run_cmd2, interactive=False)
+        j.core.tools.execute(run_cmd2, interactive=False)
 
         self._update(update=update, ssh=ssh)
 
@@ -595,24 +595,24 @@ class DockerContainer:
             self.dexec("rm -f /etc/service/sshd/down")
 
             # get our own loaded ssh pub keys into the container
-            SSHKEYS = Tools.execute("ssh-add -L", die=False, showout=False)[1]
+            SSHKEYS = j.core.tools.execute("ssh-add -L", die=False, showout=False)[1]
             if SSHKEYS.strip() != "":
                 self.dexec('echo "%s" > /root/.ssh/authorized_keys' % SSHKEYS)
-            Tools.execute("mkdir -p {0}/.ssh && touch {0}/.ssh/known_hosts".format(j.core.myenv.config["DIR_HOME"]))
+            j.core.tools.execute("mkdir -p {0}/.ssh && touch {0}/.ssh/known_hosts".format(j.core.myenv.config["DIR_HOME"]))
 
             # DIDNT seem to work well, next is better
             # cmd = 'ssh-keygen -f "%s/.ssh/known_hosts" -R "[localhost]:%s"' % (
             #     j.core.myenv.config["DIR_HOME"],
             #     self.config.sshport,
             # )
-            # Tools.execute(cmd)
+            # j.core.tools.execute(cmd)
 
             # is to make sure we can login without interactivity
             cmd = "ssh-keyscan -H -p %s localhost >> %s/.ssh/known_hosts" % (
                 self.config.sshport,
                 j.core.myenv.config["DIR_HOME"],
             )
-            Tools.execute(cmd)
+            j.core.tools.execute(cmd)
 
         self.dexec("mkdir -p /root/state")
         if update or not self.done_get("install_base"):
@@ -633,7 +633,7 @@ class DockerContainer:
             self.done_set("install_base")
 
         # cmd = "docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' %s" % self.name
-        # rc, out, err = Tools.execute(cmd, replace=False, showout=False, die=False)
+        # rc, out, err = j.core.tools.execute(cmd, replace=False, showout=False, die=False)
         # if rc == 0:
         #     self.config.ipaddr = out.strip()
         #     self.config.save()
@@ -647,9 +647,9 @@ class DockerContainer:
     @property
     def info(self):
         cmd = "docker inspect %s" % self.name
-        rc, out, err = Tools.execute(cmd, replace=False, showout=False, die=False)
+        rc, out, err = j.core.tools.execute(cmd, replace=False, showout=False, die=False)
         if rc != 0:
-            raise Tools.exceptions.Base("could not docker inspect:%s" % self.name)
+            raise j.exceptions.Base("could not docker inspect:%s" % self.name)
         data = json.loads(out)[0]
         return data
 
@@ -660,7 +660,7 @@ class DockerContainer:
             cmd2 = "docker exec -ti %s bash -c '%s'" % (self.name, cmd)
         else:
             cmd2 = "docker exec -t %s bash -c '%s'" % (self.name, cmd)
-        Tools.execute(cmd2, interactive=interactive, showout=True, replace=False, die=die)
+        j.core.tools.execute(cmd2, interactive=interactive, showout=True, replace=False, die=die)
 
     def shell(self, cmd=None):
         if not self.isrunning():
@@ -709,9 +709,9 @@ class DockerContainer:
 
     def stop(self):
         if self.container_running:
-            Tools.execute("docker stop %s" % self.name, showout=False)
+            j.core.tools.execute("docker stop %s" % self.name, showout=False)
         if self.container_exists_in_docker:
-            Tools.execute("docker rm -f %s" % self.name, die=False, showout=False)
+            j.core.tools.execute("docker rm -f %s" % self.name, die=False, showout=False)
 
     def isrunning(self):
         if self.name in DockerFactory.containers_running():
@@ -729,11 +729,11 @@ class DockerContainer:
         """
         if self.container_exists_in_docker:
             self.stop()
-            Tools.execute("docker rm -f %s" % self.name, die=False, showout=False)
-        Tools.delete(self._path)
+            j.core.tools.execute("docker rm -f %s" % self.name, die=False, showout=False)
+        j.core.tools.delete(self._path)
         if DockerFactory.image_name_exists(f"internal_{self.config.name}"):
             image = f"internal_{self.config.name}"
-            Tools.execute("docker rmi -f %s" % image, die=True, showout=False)
+            j.core.tools.execute("docker rmi -f %s" % image, die=True, showout=False)
         self.config.done_reset()
 
     @property
@@ -753,7 +753,7 @@ class DockerContainer:
             try:
                 version = int(item.replace(".tar", ""))
             except:
-                Tools.delete("%s/%s" % (dpath, item))
+                j.core.tools.delete("%s/%s" % (dpath, item))
             if version > highest:
                 highest = version
         return highest
@@ -778,17 +778,17 @@ class DockerContainer:
                 path = "%s/exports/%s.tar" % (self._path, version)
             else:
                 path = "%s/exports/%s.tar" % (self._path, name)
-        if not Tools.exists(path):
-            raise Tools.exceptions.Operations("could not find import file:%s" % path)
+        if not j.core.tools.exists(path):
+            raise j.exceptions.Operations("could not find import file:%s" % path)
 
         if not path.endswith(".tar"):
-            raise Tools.exceptions.Operations("export file needs to end with .tar")
+            raise j.exceptions.Operations("export file needs to end with .tar")
 
         self.stop()
         DockerFactory.image_remove(image)
 
         print("import docker:%s to %s, will take a while" % (path, self.name))
-        Tools.execute(f"docker import {path} {image}")
+        j.core.tools.execute(f"docker import {path} {image}")
         self.config.image = image
 
     def export(self, path=None, name=None, version=None):
@@ -799,8 +799,8 @@ class DockerContainer:
         :return:
         """
         dpath = "%s/exports/" % self._path
-        if not Tools.exists(dpath):
-            Tools.dir_ensure(dpath)
+        if not j.core.tools.exists(dpath):
+            j.core.tools.dir_ensure(dpath)
 
         if not path:
             if not name:
@@ -809,21 +809,21 @@ class DockerContainer:
                 path = "%s/exports/%s.tar" % (self._path, version)
             else:
                 path = "%s/exports/%s.tar" % (self._path, name)
-        if Tools.exists(path):
-            Tools.delete(path)
+        if j.core.tools.exists(path):
+            j.core.tools.delete(path)
         print("export docker:%s to %s, will take a while" % (self.name, path))
-        Tools.execute("docker export %s -o %s" % (self.name, path))
+        j.core.tools.execute("docker export %s -o %s" % (self.name, path))
         return path
 
     def _internal_image_save(self, stop=False, image=None):
         if not image:
             image = f"internal_{self.name}"
         cmd = "docker rmi -f %s" % image
-        Tools.execute(cmd, die=False, showout=False)
+        j.core.tools.execute(cmd, die=False, showout=False)
         cmd = "docker rmi -f %s:latest" % image
-        Tools.execute(cmd, die=False, showout=False)
+        j.core.tools.execute(cmd, die=False, showout=False)
         cmd = "docker commit -p %s %s" % (self.name, image)
-        Tools.execute(cmd)
+        j.core.tools.execute(cmd)
         if stop:
             self.stop()
         return image
@@ -896,7 +896,7 @@ class DockerContainer:
         if not image:
             image = self.image
         cmd = "docker push %s" % image
-        Tools.execute(cmd)
+        j.core.tools.execute(cmd)
 
     def _install_tcprouter(self):
         """
@@ -920,7 +920,7 @@ class DockerContainer:
     #         if i in j.core.myenv.config:
     #             CONFIG[i] = MyEnv.config[i]
     #
-    #     Tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
+    #     j.core.tools.config_save(self._path + "/cfg/jumpscale_config.toml", CONFIG)
     #
 
     def install_jumpscale(
@@ -973,7 +973,7 @@ class DockerContainer:
                     -r {} root@localhost:/tmp/".format(
                     self.config.sshport, src1
                 )
-                Tools.execute(cmd)
+                j.core.tools.execute(cmd)
 
         cmd = f"""
         cd /tmp
@@ -998,7 +998,7 @@ class DockerContainer:
             self.execute("j.servers.notebook.install()", jumpscale=True)
 
     def __repr__(self):
-        return "# CONTAINER: \n %s" % Tools._data_serializer_safe(self.config.__dict__)
+        return "# CONTAINER: \n %s" % j.core.tools._data_serializer_safe(self.config.__dict__)
 
     __str__ = __repr__
 
@@ -1007,3 +1007,4 @@ class DockerContainer:
         if not self._wireguard:
             self._wireguard = WireGuardServer(addr="127.0.0.1", port=self.config.sshport, myid=199)
         return self._wireguard
+

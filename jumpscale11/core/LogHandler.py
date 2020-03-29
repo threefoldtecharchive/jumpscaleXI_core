@@ -121,11 +121,11 @@ class LogHandler:
                 d = self._redis_get(i)
                 r.append(d)
             assert len(r) == 1000
-            log_dir = Tools.text_replace("{DIR_VAR}/logs")
+            log_dir = j.data.text.replace("{DIR_VAR}/logs")
             path = "%s/%s" % (log_dir, self.appname)
-            Tools.dir_ensure(path)
+            j.core.tools.dir_ensure(path)
             path = "%s/%s/%s.msgpack" % (log_dir, self.appname, stopid)
-            Tools.file_write(path, msgpack.dumps(r))
+            j.core.tools.file_write(path, msgpack.dumps(r))
         # now remove from redis
 
         keystodelete = []
@@ -141,11 +141,12 @@ class LogHandler:
             return
         assert isinstance(container, list)
         assert len(container) == 1000
-        Tools.shell()
+        j.core.tools.shell()
         logdir = "%s/%s" % (self._log_dir, appname)
-        if not Tools.exists(logdir):
+        if not j.core.tools.exists(logdir):
             return []
         else:
             data = msgpack.dumps(container)
-            Tools.shell()
+            j.core.tools.shell()
             w
+

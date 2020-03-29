@@ -47,7 +47,7 @@ j.core.tools.text_strip_to_ascii_dense : j.data.text.strip_to_ascii_dense
 """
 
 word_replace = """
-
+.tools.ask_ : .tools.console.ask_
 """
 
 # means there needs to be a . behind
@@ -182,6 +182,7 @@ class CodeFixer:
 
     def _fix_file(self, path):
         if path.name.find("CodeUpdater") != -1:
+            pu.db
             return
         if "." not in path.name:
             return
@@ -192,7 +193,8 @@ class CodeFixer:
         for i in range(3):
             content1 = self._fix_content(content0)
         if content1.strip() != content0.strip():
-            path.write_text(content1)
+            pass
+            # path.write_text(content1)
 
     def walk(self, path=None, file_method=None):
 

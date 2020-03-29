@@ -141,7 +141,7 @@ if redis:
         @property
         def _redis_cli_path(self):
             if not self.__class__._redis_cli_path_:
-                if Tools.cmd_installed("redis-cli_"):
+                if j.core.tools.cmd_installed("redis-cli_"):
                     self.__class__._redis_cli_path_ = "redis-cli_"
                 else:
                     self.__class__._redis_cli_path_ = "redis-cli"
@@ -171,14 +171,14 @@ if redis:
                 for arg in args:
                     rediscmd += " %s" % arg
             # print(rediscmd)
-            _, out, _ = Tools.execute(rediscmd, interactive=True)
+            _, out, _ = j.core.tools.execute(rediscmd, interactive=True)
             return out
 
         def _sp_data(self, name):
             if name not in self._storedprocedures_to_sha:
                 data = self.hget("storedprocedures:data", name)
                 if not data:
-                    raise Tools.exceptions.Base("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
+                    raise j.exceptions.Base("could not find: '%s:%s' in redis" % (("storedprocedures:data", name)))
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
@@ -195,7 +195,7 @@ if redis:
             sha = data["sha"]  # .encode()
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
-            # Tools.shell()
+            # j.core.tools.shell()
             return self.evalsha(sha, data["nrkeys"], *args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
@@ -243,7 +243,7 @@ class RedisTools:
         """
         import redis
 
-        unix_socket_path = Tools.text_replace(unix_socket_path)
+        unix_socket_path = j.data.text.replace(unix_socket_path)
         RedisTools.unix_socket_path = unix_socket_path
         # cl = Redis(unix_socket_path=unix_socket_path, db=0)
         cl = Redis(host=addr, port=port, db=0)
@@ -312,14 +312,14 @@ class RedisTools:
         :rtype: bool
         """
         j.core.myenv.db = None
-        Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
-        Tools.execute("redis-cli shutdown", die=False, showout=False)
+        j.core.tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+        j.core.tools.execute("redis-cli shutdown", die=False, showout=False)
         nr = 0
         while True:
             if not RedisTools.core_running():
                 return True
             if nr > 200:
-                raise Tools.exceptions.Base("could not stop redis")
+                raise j.exceptions.Base("could not stop redis")
             time.sleep(0.05)
 
     def core_running(unixsocket=True, tcp=True):
@@ -336,7 +336,7 @@ class RedisTools:
             if r:
                 return True
 
-        if tcp and Tools.tcp_port_connection_test("localhost", 6379):
+        if tcp and j.core.tools.tcp_port_connection_test("localhost", 6379):
             r = RedisTools.client_core_get(addr="localhost", port=6379, die=False)
             if r:
                 return True
@@ -359,33 +359,33 @@ class RedisTools:
         :type reset: bool, optional
         :raises RuntimeError: redis server not found after install
         :raises RuntimeError: platform not supported for start redis
-        :raises Tools.exceptions.Timeout: Couldn't start redis server
+        :raises j.exceptions.Timeout: Couldn't start redis server
         :return: redis instance
         :rtype: Redis
         """
 
         if reset is False:
             if RedisTools._j.core.myenv.platform_is_osx:
-                if not Tools.cmd_installed("redis-server"):
+                if not j.core.tools.cmd_installed("redis-server"):
                     # prefab.system.package.install('redis')
-                    Tools.execute("brew unlink redis", die=False)
-                    Tools.execute("brew install redis")
-                    Tools.execute("brew link redis")
-                    if not Tools.cmd_installed("redis-server"):
-                        raise Tools.exceptions.Base("Cannot find redis-server even after install")
-                Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
-                Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
-                Tools.execute("redis-cli shutdown", die=False, showout=False)
+                    j.core.tools.execute("brew unlink redis", die=False)
+                    j.core.tools.execute("brew install redis")
+                    j.core.tools.execute("brew link redis")
+                    if not j.core.tools.cmd_installed("redis-server"):
+                        raise j.exceptions.Base("Cannot find redis-server even after install")
+                j.core.tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
+                j.core.tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+                j.core.tools.execute("redis-cli shutdown", die=False, showout=False)
             elif RedisTools._j.core.myenv.platform_is_linux:
-                Tools.execute("apt-get install redis-server -y")
-                if not Tools.cmd_installed("redis-server"):
-                    raise Tools.exceptions.Base("Cannot find redis-server even after install")
-                Tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
-                Tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
-                Tools.execute("redis-cli shutdown", die=False, showout=False)
+                j.core.tools.execute("apt-get install redis-server -y")
+                if not j.core.tools.cmd_installed("redis-server"):
+                    raise j.exceptions.Base("Cannot find redis-server even after install")
+                j.core.tools.execute("redis-cli -s {DIR_TMP}/redis.sock shutdown", die=False, showout=False)
+                j.core.tools.execute("redis-cli -s %s shutdown" % RedisTools.unix_socket_path, die=False, showout=False)
+                j.core.tools.execute("redis-cli shutdown", die=False, showout=False)
 
             else:
-                raise Tools.exceptions.Base("platform not supported for start redis")
+                raise j.exceptions.Base("platform not supported for start redis")
 
         if not RedisTools._j.core.myenv.platform_is_osx:
             cmd = "sysctl vm.overcommit_memory=1"
@@ -400,12 +400,12 @@ class RedisTools:
             "--maxmemory 100000000 --daemonize yes"
         )
         cmd = cmd.replace("$UNIXSOCKET", RedisTools.unix_socket_path)
-        cmd = Tools.text_replace(cmd)
+        cmd = j.data.text.replace(cmd)
 
         assert "{" not in cmd
 
         j.core.tools.log(cmd)
-        Tools.execute(cmd, replace=True)
+        j.core.tools.execute(cmd, replace=True)
         limit_timeout = time.time() + timeout
         while time.time() < limit_timeout:
             if RedisTools.core_running():
@@ -413,4 +413,5 @@ class RedisTools:
             print("trying to start redis")
             time.sleep(0.1)
         else:
-            raise Tools.exceptions.Base("Couldn't start redis server")
+            raise j.exceptions.Base("Couldn't start redis server")
+

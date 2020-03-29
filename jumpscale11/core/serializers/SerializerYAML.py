@@ -38,7 +38,7 @@ class SerializerYAML(SerializerBase):
 
     def load(self, path):
         try:
-            s = j.sal.fs.readFile(path)
+            s = j.sal.fs.file_read(path)
         except Exception as e:
             error = "error:%s\n" % e
             error += "\npath:%s\n" % path
@@ -108,3 +108,4 @@ class SerializerYAML(SerializerBase):
 #         """
 #         return dump(obj, width=width, default_flow_style=False)
 #
+

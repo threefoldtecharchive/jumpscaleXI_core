@@ -426,7 +426,7 @@ class MyEnv:
             If the SSH key is not found, repositories will be cloned using https.
             Is better to stop now and to load an ssh-agent with 1 key.
             """
-            print(self._j.core.tools.text_strip(T))
+            print(self._j.data.text.strip(T))
             if self.interactive:
                 if not self._j.core.tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
@@ -498,7 +498,7 @@ class MyEnv:
         :return: logdict see github/threefoldtech/jumpscaleX_core/docs/Internals/logging_errorhandling/logdict.md
         """
         if isinstance(exception_obj, self._j.core.tools.exceptions.RemoteException):
-            print(self._j.core.tools.text_replace("{RED}*****Remote Exception*****{RESET}"))
+            print(self._j.data.text.replace("{RED}*****Remote Exception*****{RESET}"))
             logdict = exception_obj.data
             self._j.core.tools.log2stdout(logdict)
 
@@ -629,3 +629,4 @@ class MyEnv:
         """
         self._j.core.tools.delete(self.state_file_path)
         self._state_load()
+

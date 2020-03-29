@@ -15,7 +15,7 @@ class SSHAgent:
         if "SSH_AUTH_SOCK" in os.environ:
             return os.environ["SSH_AUTH_SOCK"]
 
-        socketpath = Tools.text_replace("{DIR_VAR}/sshagent_socket")
+        socketpath = j.data.text.replace("{DIR_VAR}/sshagent_socket")
         os.environ["SSH_AUTH_SOCK"] = socketpath
         return socketpath
 
@@ -24,7 +24,7 @@ class SSHAgent:
             if j.core.myenvconfig["SSH_KEY_DEFAULT"]:
                 name = j.core.myenv.config["SSH_KEY_DEFAULT"]
             elif j.core.myenv.interactive:
-                name = Tools.ask_string("give name for your sshkey")
+                name = j.core.tools.ask_string("give name for your sshkey")
             else:
                 name = "default"
         return name
@@ -41,24 +41,24 @@ class SSHAgent:
 
         if not passphrase:
             if j.core.myenv.config["interactive"]:
-                passphrase = Tools.ask_password(
+                passphrase = j.core.tools.ask_password(
                     "passphrase for ssh key to generate, \
                         press enter to skip and not use a passphrase"
                 )
 
-        path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
-        Tools.Ensure("{DIR_HOME}/.ssh")
+        path = j.data.text.replace("{DIR_HOME}/.ssh/%s" % name)
+        j.core.tools.Ensure("{DIR_HOME}/.ssh")
 
         if reset:
-            Tools.delete("%s" % path)
-            Tools.delete("%s.pub" % path)
+            j.core.tools.delete("%s" % path)
+            j.core.tools.delete("%s.pub" % path)
 
-        if not Tools.exists(path) or reset:
+        if not j.core.tools.exists(path) or reset:
             if passphrase:
                 cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(path, passphrase)
             else:
                 cmd = "ssh-keygen -t rsa -f {}".format(path)
-            Tools.execute(cmd, timeout=10)
+            j.core.tools.execute(cmd, timeout=10)
 
             j.core.tools.log("load generated sshkey: %s" % path)
 
@@ -75,16 +75,16 @@ class SSHAgent:
         def ask_key(key_names):
             if len(key_names) == 1:
                 # if j.core.myenv.interactive:
-                #     if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % key_names[0]):
+                #     if not j.core.tools.ask_yes_no("Ok to use key: '%s' as your default key?" % key_names[0]):
                 #         return None
                 name = key_names[0]
             elif len(key_names) == 0:
-                raise Tools.exceptions.Operations(
+                raise j.exceptions.Operations(
                     "Cannot find a possible ssh-key, please load your possible keys in your ssh-agent or have in your homedir/.ssh"
                 )
             else:
                 if j.core.myenv.interactive:
-                    name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+                    name = j.core.tools.ask_choice("Which is your default sshkey to use", key_names)
                 else:
                     name = "id_rsa"
             return name
@@ -97,11 +97,11 @@ class SSHAgent:
             if len(self.key_names) > 0:
                 sshkey = ask_key(self.key_names)
         if not sshkey:
-            hdir = Tools.text_replace("{DIR_HOME}/.ssh")
-            if not Tools.exists(hdir):
+            hdir = j.data.text.replace("{DIR_HOME}/.ssh")
+            if not j.core.tools.exists(hdir):
                 msg = "cannot find home dir:%s" % hdir
                 msg += "\n### Please get a ssh key or generate one using ssh-keygen\n"
-                raise Tools.exceptions.Operations(msg)
+                raise j.exceptions.Operations(msg)
             choices = []
             for item in os.listdir(hdir):
                 item2 = item.lower()
@@ -115,7 +115,7 @@ class SSHAgent:
 
         if not sshkey in self.key_names:
             if DockerFactory.indocker():
-                raise Tools.exceptions.Base("sshkey should be passed forward by means of SSHAgent")
+                raise j.exceptions.Base("sshkey should be passed forward by means of SSHAgent")
             self.key_load(name=sshkey)
             assert sshkey in self.key_names
 
@@ -139,18 +139,18 @@ class SSHAgent:
         :return: name,path
         """
         if name:
-            path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
+            path = j.data.text.replace("{DIR_HOME}/.ssh/%s" % name)
         elif path:
             name = os.path.basename(path)
         else:
             name = self._key_name_get(name)
-            path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
+            path = j.data.text.replace("{DIR_HOME}/.ssh/%s" % name)
 
         if name in self.key_names:
             return
 
-        if not Tools.exists(path):
-            raise Tools.exceptions.Base("Cannot find path:%s for sshkey (private key)" % path)
+        if not j.core.tools.exists(path):
+            raise j.exceptions.Base("Cannot find path:%s for sshkey (private key)" % path)
 
         j.core.tools.log("load ssh key: %s" % path)
         os.chmod(path, 0o600)
@@ -166,16 +166,16 @@ class SSHAgent:
                 """.format(
                 path=path, passphrase=passphrase, duration=duration
             )
-            rc, out, err = Tools.execute(C, showout=False, die=False)
+            rc, out, err = j.core.tools.execute(C, showout=False, die=False)
             if rc > 0:
-                Tools.delete("/tmp/ap-cat.sh")
-                raise Tools.exceptions.Operations("Could not load sshkey with passphrase (%s)" % path)
+                j.core.tools.delete("/tmp/ap-cat.sh")
+                raise j.exceptions.Operations("Could not load sshkey with passphrase (%s)" % path)
         else:
             # load without passphrase
             cmd = "ssh-add -t %s %s " % (duration, path)
-            rc, out, err = Tools.execute(cmd, showout=False, die=False)
+            rc, out, err = j.core.tools.execute(cmd, showout=False, die=False)
             if rc > 0:
-                raise Tools.exceptions.Operations("Could not load sshkey without passphrase (%s)" % path)
+                raise j.exceptions.Operations("Could not load sshkey without passphrase (%s)" % path)
 
         self.reset()
 
@@ -185,11 +185,11 @@ class SSHAgent:
         if name in self._keys:
             path = self.key_path_get(name)
             cmd = "ssh-add -d %s" % (path)
-            rc, out, err = Tools.execute(cmd, showout=False, die=True)
+            rc, out, err = j.core.tools.execute(cmd, showout=False, die=True)
 
     def keys_unload(self):
         cmd = "ssh-add -D"
-        rc, out, err = Tools.execute(cmd, showout=False, die=True)
+        rc, out, err = j.core.tools.execute(cmd, showout=False, die=True)
 
     @property
     def _keys(self):
@@ -200,28 +200,28 @@ class SSHAgent:
         return self.__keys
 
     def _read_keys(self):
-        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=2)
+        return_code, out, err = j.core.tools.execute("ssh-add -L", showout=False, die=False, timeout=2)
         if return_code:
             if return_code == 1 and out.find("The agent has no identities") != -1:
                 self.__keys = []
                 return []
             else:
                 # Remove old socket if can't connect
-                if Tools.exists(self.ssh_socket_path):
-                    Tools.delete(self.ssh_socket_path)
+                if j.core.tools.exists(self.ssh_socket_path):
+                    j.core.tools.delete(self.ssh_socket_path)
                     # did not work first time, lets try again
-                    return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=10)
+                    return_code, out, err = j.core.tools.execute("ssh-add -L", showout=False, die=False, timeout=10)
 
         if return_code and self.autostart:
             # ok still issue, lets try to start the ssh-agent if that could be done
             self.start()
-            return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=10)
+            return_code, out, err = j.core.tools.execute("ssh-add -L", showout=False, die=False, timeout=10)
             if return_code == 1 and out.find("The agent has no identities") != -1:
                 self.__keys = []
                 return []
 
         if return_code:
-            return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=10)
+            return_code, out, err = j.core.tools.execute("ssh-add", showout=False, die=False, timeout=10)
             if out.find("Error connecting to agent: No such file or directory"):
                 raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
             else:
@@ -294,7 +294,7 @@ class SSHAgent:
             if item2.lower() == keyname.lower():
                 return item
         if die:
-            raise Tools.exceptions.Base(
+            raise j.exceptions.Base(
                 "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname
             )
 
@@ -304,7 +304,7 @@ class SSHAgent:
 
     @property
     def keypub(self):
-        return Tools.file_read(self.keypub_path_get()).decode()
+        return j.core.tools.file_read(self.keypub_path_get()).decode()
 
     def profile_js_configure(self):
         """
@@ -312,10 +312,10 @@ class SSHAgent:
         """
 
         bashprofile_path = os.path.expanduser("~/.profile")
-        if not Tools.exists(bashprofile_path):
-            Tools.execute("touch %s" % bashprofile_path)
+        if not j.core.tools.exists(bashprofile_path):
+            j.core.tools.execute("touch %s" % bashprofile_path)
 
-        content = Tools.readFile(bashprofile_path)
+        content = j.core.tools.file_read(bashprofile_path)
         out = ""
         for line in content.split("\n"):
             if line.find("#JSSSHAGENT") != -1:
@@ -328,7 +328,7 @@ class SSHAgent:
         out += '[ -z "SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK=%s' % self.ssh_socket_path
         out = out.replace("\n\n\n", "\n\n")
         out = out.replace("\n\n\n", "\n\n")
-        Tools.writeFile(bashprofile_path, out)
+        j.core.tools.file_write(bashprofile_path, out)
 
     def start(self):
         """
@@ -342,20 +342,20 @@ class SSHAgent:
 
         socketpath = self.ssh_socket_path
 
-        Tools.process_kill_by_by_filter("ssh-agent")
+        j.core.tools.process_kill_by_by_filter("ssh-agent")
 
-        Tools.delete(socketpath)
+        j.core.tools.delete(socketpath)
 
-        if not Tools.exists(socketpath):
+        if not j.core.tools.exists(socketpath):
             j.core.tools.log("start ssh agent")
-            Tools.dir_ensure("{DIR_VAR}")
-            rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
+            j.core.tools.dir_ensure("{DIR_VAR}")
+            rc, out, err = j.core.tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise Tools.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise j.exceptions.Base("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
-                if not Tools.exists(socketpath):
+                if not j.core.tools.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
-                    raise Tools.exceptions.Base(err_msg)
+                    raise j.exceptions.Base(err_msg)
 
                 # get pid from out of ssh-agent being started
                 piditems = [item for item in out.split("\n") if item.find("pid") != -1]
@@ -363,11 +363,11 @@ class SSHAgent:
                 # print(piditems)
                 if len(piditems) < 1:
                     j.core.tools.log("results was: %s", out)
-                    raise Tools.exceptions.Base("Cannot find items in ssh-add -l")
+                    raise j.exceptions.Base("Cannot find items in ssh-add -l")
 
                 # pid = int(piditems[-1].split(" ")[-1].strip("; "))
                 # socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
-                # j.sal.fs.writeFile(socket_path, str(pid))
+                # j.sal.fs.file_write(socket_path, str(pid))
 
             return
 
@@ -378,7 +378,8 @@ class SSHAgent:
         Kill all agents if more than one is found
 
         """
-        Tools.process_kill_by_by_filter("ssh-agent")
-        Tools.delete(self.ssh_socket_path)
-        # Tools.delete("/tmp", "ssh-agent-pid"))
+        j.core.tools.process_kill_by_by_filter("ssh-agent")
+        j.core.tools.delete(self.ssh_socket_path)
+        # j.core.tools.delete("/tmp", "ssh-agent-pid"))
         self.reset()
+

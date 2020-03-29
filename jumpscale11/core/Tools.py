@@ -198,7 +198,7 @@ class Tools:
         :param tb:
         :return:
         """
-        raise Tools.exceptions.Base()
+        raise j.exceptions.Base()
 
         tblist = traceback.format_exception(ttype, err, tb)
 
@@ -216,8 +216,8 @@ class Tools:
         return tb_text
 
     def _trace_print(self, tb_text):
-        if Tools._j.core.myenv.pygmentsObj:
-            Tools._j.core.myenv.pygmentsObj
+        if j.core.myenv.pygmentsObj:
+            j.core.myenv.pygmentsObj
             # style=pygments.styles.get_style_by_name("vim")
             formatter = pygments.formatters.Terminal256Formatter()
             lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)  # pytb
@@ -268,11 +268,11 @@ class Tools:
         :return:
         """
         logdict = {}
-        if Tools._j.core.myenv.debug or level > 39:  # error+ is shown
+        if j.core.myenv.debug or level > 39:  # error+ is shown
             stdout = True
 
         if isinstance(msg, Exception):
-            raise Tools.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
+            raise j.exceptions.JSBUG("msg cannot be an exception raise by means of exception=... in constructor")
 
         # first deal with traceback
         if exception and not tb:
@@ -305,7 +305,7 @@ class Tools:
 
         if exception:
             # make sure exceptions get the right priority
-            if isinstance(exception, Tools.exceptions.Base):
+            if isinstance(exception, j.exceptions.Base):
                 level = exception.level
 
             if not level:
@@ -350,7 +350,7 @@ class Tools:
         if not isinstance(msg, str):
             msg = str(msg)
 
-        logdict["message"] = msg  # Tools.text_replace(msg)
+        logdict["message"] = msg  # j.data.text.replace(msg)
 
         logdict["linenr"] = linenr
         logdict["filepath"] = fname
@@ -380,7 +380,7 @@ class Tools:
         logdict["data"] = data
         if stdout:
             logdict = copy.copy(logdict)
-            logdict["message"] = Tools.text_replace(logdict["message"])
+            logdict["message"] = j.data.text.replace(logdict["message"])
             Tools.log2stdout(logdict, data_show=data_show)
         elif level > 14:
             Tools.log2stdout(logdict, data_show=False, enduser=True)
@@ -393,23 +393,23 @@ class Tools:
         """
 
         :param logdict:
-        :param iserror:   if error will use Tools._j.core.myenv.errorhandlers: allways Tools._j.core.myenv.loghandlers
+        :param iserror:   if error will use j.core.myenv.errorhandlers: allways j.core.myenv.loghandlers
         :return:
         """
 
         assert isinstance(logdict, dict)
 
         if iserror:
-            for handler in Tools._j.core.myenv.errorhandlers:
+            for handler in j.core.myenv.errorhandlers:
                 handler(logdict)
 
         else:
 
-            for handler in Tools._j.core.myenv.loghandlers:
+            for handler in j.core.myenv.loghandlers:
                 try:
                     handler(logdict)
                 except Exception as e:
-                    Tools._j.core.myenv.exception_handle(e)
+                    j.core.myenv.exception_handle(e)
 
         return logdict
 
@@ -423,11 +423,11 @@ class Tools:
         """
         assert callable(method)
         code = inspect.getsource(method)
-        code2 = Tools.text_strip(code)
+        code2 = j.data.text.strip(code)
         code3 = code2.replace("self,", "").replace("self ,", "").replace("self  ,", "")
 
         if kwargs:
-            code3 = Tools.text_replace(code3, text_strip=False, args=kwargs)
+            code3 = j.data.text.replace(code3, text_strip=False, args=kwargs)
 
         methodname = ""
         for line in code3.split("\n"):
@@ -448,11 +448,9 @@ class Tools:
         if command.find("{DIR_") != -1:
             if original_command:
                 print("COMMAND WAS:\n%s" % command)
-                raise Tools.exceptions.Input(
-                    "cannot execute found template var\ncmd:%s\n%s" % (original_command, command)
-                )
+                raise j.exceptions.Input("cannot execute found template var\ncmd:%s\n%s" % (original_command, command))
             else:
-                raise Tools.exceptions.Input("cannot execute found template var\ncmd:%s" % command)
+                raise j.exceptions.Input("cannot execute found template var\ncmd:%s" % command)
 
     @staticmethod
     def _execute(
@@ -478,15 +476,15 @@ class Tools:
             retry = 1
 
         if not executor:
-            executor = Tools._j.core.myenv
+            executor = j.core.myenv
 
         if executor.debug:
             showout = True
 
         if executor.debug or log:
-            j.core.tools.log("execute:%s" % command)
+            Tools.log("execute:%s" % command)
             if original_command:
-                j.core.tools.log("execute_original:%s" % original_command)
+                Tools.log("execute_original:%s" % original_command)
 
         Tools._cmd_check(command, original_command)
         rc = 1
@@ -506,7 +504,7 @@ class Tools:
                     timeout=timeout,
                 )
             if rc > 0 and retry > 1:
-                j.core.tools.log("redo cmd", level=30)
+                Tools.log("redo cmd", level=30)
             counter += 1
 
         if die and rc != 0:
@@ -527,7 +525,7 @@ class Tools:
             if err.strip() != "":
                 msg += "stderr:\n"
                 msg += Tools.text_indent(err).rstrip() + "\n\n"
-            raise Tools.exceptions.Base(msg)
+            raise j.exceptions.Base(msg)
 
         return rc, out, err
 
@@ -558,7 +556,7 @@ class Tools:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                close_fds=Tools._j.core.myenv.platform_is_unix,
+                close_fds=j.core.myenv.platform_is_unix,
                 shell=True,
                 env=env,
                 universal_newlines=False,
@@ -573,7 +571,7 @@ class Tools:
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                close_fds=Tools._j.core.myenv.platform_is_unix,
+                close_fds=j.core.myenv.platform_is_unix,
                 shell=False,
                 env=env,
                 universal_newlines=False,
@@ -594,7 +592,7 @@ class Tools:
             return p
 
         def readout(stream):
-            if Tools._j.core.myenv.platform_is_unix:
+            if j.core.myenv.platform_is_unix:
                 # Store all intermediate data
                 data = list()
                 while True:
@@ -619,7 +617,7 @@ class Tools:
                 def readout(stream):
                     line = stream.read().decode()
                     if showout:
-                        # j.core.tools.log(line)
+                        # Tools.log(line)
                         Tools.pprint(line, end="")
 
         if timeout is None or timeout < 0:
@@ -636,7 +634,7 @@ class Tools:
             out = readout(p.stdout)
             err = readout(p.stderr)
             if (out is None or err is None) and p.poll() is None:
-                raise Tools.exceptions.Base("prob bug, needs to think this through, seen the while loop")
+                raise j.exceptions.Base("prob bug, needs to think this through, seen the while loop")
             while p.poll() is None:
                 # means process is still running
 
@@ -645,14 +643,14 @@ class Tools:
                 # print("wait")
 
                 if timeout != 0 and now > end:
-                    if Tools._j.core.myenv.platform_is_unix:
+                    if j.core.myenv.platform_is_unix:
                         # Soft and hard kill on Unix
                         try:
                             p.terminate()
                             # Give the process some time to settle
                             time.sleep(0.2)
                             p.kill()
-                            raise Tools.exceptions.Timeout(f"command: '{command}' timed out after {timeout} seconds")
+                            raise j.exceptions.Timeout(f"command: '{command}' timed out after {timeout} seconds")
                         except OSError:
                             pass
                     else:
@@ -660,8 +658,8 @@ class Tools:
                         time.sleep(0.1)
                         if p.poll():
                             p.terminate()
-                    if Tools._j.core.myenv.debug or showout:
-                        j.core.tools.log("process killed because of timeout", level=30)
+                    if j.core.myenv.debug or showout:
+                        Tools.log("process killed because of timeout", level=30)
                     return (-2, out, err)
 
                 # Read out process streams, but don't block
@@ -695,7 +693,7 @@ class Tools:
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd = " ".join(args)
         if returncode == 127:
-            raise Tools.exceptions.Base("{}: command not found\n".format(cmd))
+            raise j.exceptions.Base("{}: command not found\n".format(cmd))
         return returncode, "", ""
 
     @staticmethod
@@ -719,9 +717,7 @@ class Tools:
             if Tools.cmd_installed(editor):
                 Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        raise Tools.exceptions.Base(
-            "cannot edit the file: '{}', non of the supported editors is installed".format(path)
-        )
+        raise j.exceptions.Base("cannot edit the file: '{}', non of the supported editors is installed".format(path))
 
     @staticmethod
     def file_write(path, content, replace=False, args=None):
@@ -735,7 +731,7 @@ class Tools:
         p = Path(path)
         if isinstance(content, str):
             if replace:
-                content = Tools.text_replace(content, args=args)
+                content = j.data.text.replace(content, args=args)
             p.write_text(content)
         else:
             p.write_bytes(content)
@@ -753,7 +749,7 @@ class Tools:
 
     @staticmethod
     def file_text_read(path):
-        path = Tools.text_replace(path)
+        path = j.data.text.replace(path)
         p = Path(path)
         try:
             return p.read_text()
@@ -762,7 +758,7 @@ class Tools:
 
     @staticmethod
     def file_read(path):
-        path = Tools.text_replace(path)
+        path = j.data.text.replace(path)
         p = Path(path)
         try:
             return p.read_bytes()
@@ -781,7 +777,7 @@ class Tools:
         :type remove_existing: bool, optional
         """
 
-        path = Tools.text_replace(path)
+        path = j.data.text.replace(path)
 
         if os.path.exists(path) and remove_existing is True:
             Tools.delete(path)
@@ -798,8 +794,8 @@ class Tools:
         :param chmod e.g. 770
         :return:
         """
-        src = Tools.text_replace(src)
-        dest = Tools.text_replace(dest)
+        src = j.data.text.replace(src)
+        dest = j.data.text.replace(dest)
         Tools.execute("rm -f %s" % dest)
         Tools.execute("ln -s {} {}".format(src, dest))
         if chmod:
@@ -810,9 +806,9 @@ class Tools:
         """Remove a File/Dir/...
         @param path: string (File path required to be removed)
         """
-        path = Tools.text_replace(path)
-        if Tools._j.core.myenv.debug:
-            j.core.tools.log("Remove file with path: %s" % path)
+        path = j.data.text.replace(path)
+        if j.core.myenv.debug:
+            Tools.log("Remove file with path: %s" % path)
         if os.path.islink(path):
             os.unlink(path)
         if not Tools.exists(path):
@@ -848,7 +844,7 @@ class Tools:
         @rtype: boolean (True if path refers to an existing path)
         """
         if path is None:
-            raise Tools.exceptions.Value("Path is not passed in system.fs.exists")
+            raise j.exceptions.Value("Path is not passed in system.fs.exists")
         found = False
         try:
             st = os.lstat(path)
@@ -856,22 +852,22 @@ class Tools:
         except (OSError, AttributeError):
             pass
         if found and followlinks and stat.S_ISLNK(st.st_mode):
-            if Tools._j.core.myenv.debug:
-                j.core.tools.log("path %s exists" % str(path.encode("utf-8")))
+            if j.core.myenv.debug:
+                Tools.log("path %s exists" % str(path.encode("utf-8")))
             linkpath = os.readlink(path)
             if linkpath[0] != "/":
                 linkpath = os.path.join(Tools.path_parent(path), linkpath)
             return Tools.exists(linkpath)
         if found:
             return True
-        # j.core.tools.log('path %s does not exist' % str(path.encode("utf-8")))
+        # Tools.log('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @staticmethod
     def _installbase_for_shell():
         from .DockerFactory import DockerFactory
 
-        if "darwin" in Tools._j.core.myenv.platform:
+        if "darwin" in j.core.myenv.platform:
 
             script = """
             pip3 install pudb pygments ipython 'ptpython<3' 'prompt-toolkit<3' --force-reinstall
@@ -965,18 +961,18 @@ class Tools:
             return str(data)
 
         serialized = serializer(data)
-        res = Tools.text_replace(content=serialized, ignorecolors=True)
+        res = j.data.text.replace(content=serialized, ignorecolors=True)
         return res
 
     @staticmethod
     def log2stdout(logdict, data_show=False, enduser=False):
         def show():
             # always show in debugmode and critical
-            if Tools._j.core.myenv.debug or (logdict and logdict["level"] >= 50):
+            if j.core.myenv.debug or (logdict and logdict["level"] >= 50):
                 return True
-            if not Tools._j.core.myenv.log_console:
+            if not j.core.myenv.log_console:
                 return False
-            return logdict and (logdict["level"] >= Tools._j.core.myenv.log_level)
+            return logdict and (logdict["level"] >= j.core.myenv.log_level)
 
         if not show() and not data_show:
             return
@@ -987,14 +983,14 @@ class Tools:
             else:
                 msg = logdict["message"]
             if logdict["level"] > 29:
-                print(Tools.text_replace("{RED} * %s{RESET}\n" % msg))
+                print(j.data.text.replace("{RED} * %s{RESET}\n" % msg))
             else:
-                print(Tools.text_replace("{YELLOW} * %s{RESET}\n" % msg))
+                print(j.data.text.replace("{YELLOW} * %s{RESET}\n" % msg))
             return
 
         text = Tools.log2str(logdict, data_show=True, replace=True)
         p = print
-        if Tools._j.core.myenv.config.get("LOGGER_PANEL_NRLINES"):
+        if j.core.myenv.config.get("LOGGER_PANEL_NRLINES"):
             if Tools.custom_log_printer:
                 p = Tools.custom_log_printer
         try:
@@ -1015,7 +1011,7 @@ class Tools:
         if not isinstance(tb, list):
             tb = Tools.traceback_list_format(tb)
 
-        out = Tools.text_replace("\n{RED}--TRACEBACK------------------{RESET}\n")
+        out = j.data.text.replace("\n{RED}--TRACEBACK------------------{RESET}\n")
         for tb_path, tb_name, tb_lnr, tb_line, tb_locals in tb:
             C = "{GREEN}{tb_path}{RESET} in {BLUE}{tb_name}{RESET}\n"
             C += "    {GREEN}{tb_lnr}{RESET}    {tb_code}{RESET}"
@@ -1024,9 +1020,9 @@ class Tools:
             else:
                 tb_code = tb_line
             tbdict = {"tb_path": tb_path, "tb_name": tb_name, "tb_lnr": tb_lnr, "tb_code": tb_code}
-            C = Tools.text_replace(C.lstrip(), args=tbdict, text_strip=True)
+            C = j.data.text.replace(C.lstrip(), args=tbdict, text_strip=True)
             out += C.rstrip() + "\n"
-        out += Tools.text_replace("{RED}-----------------------------\n{RESET}")
+        out += j.data.text.replace("{RED}-----------------------------\n{RESET}")
         return out
 
     @staticmethod
@@ -1053,7 +1049,7 @@ class Tools:
             timetuple = time.localtime(logdict["epoch"])
         else:
             timetuple = time.localtime(time.time())
-        logdict["TIME"] = time.strftime(Tools._j.core.myenv.FORMAT_TIME, timetuple)
+        logdict["TIME"] = time.strftime(j.core.myenv.FORMAT_TIME, timetuple)
 
         if logdict["level"] < 11:
             LOGLEVEL = "DEBUG"
@@ -1068,7 +1064,7 @@ class Tools:
         else:
             LOGLEVEL = "CRITICAL"
 
-        LOGFORMAT = Tools._j.core.myenv.LOGFORMAT[LOGLEVEL]
+        LOGFORMAT = j.core.myenv.LOGFORMAT[LOGLEVEL]
 
         if len(logdict["filepath"]) > 20:
             logdict["filename"] = logdict["filepath"][-20:]
@@ -1086,9 +1082,9 @@ class Tools:
 
         # TO SHOW WERE LOG COMES FROM e.g. from subprocess
         if "source" in logdict:
-            out += Tools.text_replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
+            out += j.data.text.replace("{RED}--SOURCE: %s-20--{RESET}\n" % logdict["source"])
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict, die_if_args_left=False).rstrip()
+        msg = j.data.text.replace(LOGFORMAT, args=logdict, die_if_args_left=False).rstrip()
         out += msg
 
         if "traceback" in logdict and logdict["traceback"]:
@@ -1104,9 +1100,9 @@ class Tools:
                 else:
                     data = logdict["data"]
                 data = Tools.text_indent(data, 2, strip=True)
-                out += Tools.text_replace("\n{YELLOW}--DATA-----------------------\n")
+                out += j.data.text.replace("\n{YELLOW}--DATA-----------------------\n")
                 out += data.rstrip() + "\n"
-                out += Tools.text_replace("-----------------------------{RESET}\n")
+                out += j.data.text.replace("-----------------------------{RESET}\n")
 
         if logdict["level"] > 39:
             # means is error
@@ -1120,7 +1116,7 @@ class Tools:
         logdict.pop("filename")
 
         if replace:
-            out = Tools.text_replace(out)
+            out = j.data.text.replace(out)
             if out.find("{RESET}") != -1:
                 Tools.shell()
 
@@ -1151,19 +1147,19 @@ class Tools:
         if not isinstance(content, str):
             content = str(content)
         if args or colors or text_strip:
-            content = Tools.text_replace(
+            content = j.data.text.replace(
                 content, args=args, text_strip=text_strip, ignorecomments=ignorecomments, die_if_args_left=False
             )
-            for key, val in Tools._j.core.myenv.MYCOLORS.items():
+            for key, val in j.core.myenv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)
         elif content.find("{RESET}") != -1:
-            for key, val in Tools._j.core.myenv.MYCOLORS.items():
+            for key, val in j.core.myenv.MYCOLORS.items():
                 content = content.replace("{%s}" % key, val)
 
         if indent > 0:
             content = Tools.text_indent(content)
         if log:
-            j.core.tools.log(content, level=15, stdout=False)
+            Tools.log(content, level=15, stdout=False)
 
         try:
             print(content, end=end)
@@ -1174,7 +1170,9 @@ class Tools:
     @staticmethod
     def _file_path_tmp_get(ext="sh"):
         ext = ext.strip(".")
-        return Tools.text_replace("/tmp/jumpscale/scripts/{RANDOM}.{ext}", args={"RANDOM": Tools._random(), "ext": ext})
+        return j.data.text.replace(
+            "/tmp/jumpscale/scripts/{RANDOM}.{ext}", args={"RANDOM": Tools._random(), "ext": ext}
+        )
 
     @staticmethod
     def _random():
@@ -1263,7 +1261,7 @@ class Tools:
         :return:
         """
 
-        cmd = Tools.text_strip(cmd)
+        cmd = j.data.text.strip(cmd)
 
         assert sudo is None or sudo is False  # not implemented yet
         if env is None:
@@ -1305,14 +1303,14 @@ class Tools:
                 script = Tools._script_process_bash(script, die=die, env=env, debug=debug)
 
             if replace:
-                script = Tools.text_replace(script, args=env, executor=executor)
+                script = j.data.text.replace(script, args=env, executor=executor)
             if executor:
                 executor.file_write(dest, script)
             else:
                 Tools.file_write(dest, script)
 
         if replace:
-            cmd = Tools.text_replace(cmd, args=env, executor=executor)
+            cmd = j.data.text.replace(cmd, args=env, executor=executor)
 
         Tools._cmd_check(cmd)
         Tools._cmd_check(script)
@@ -1374,7 +1372,7 @@ class Tools:
         )
 
         if die_if_args_left and "{" in command:
-            raise Tools.exceptions.Input("Found { in %s" % command)
+            raise j.exceptions.Input("Found { in %s" % command)
 
         r = Tools._execute(
             command,
@@ -1439,9 +1437,9 @@ class Tools:
 
     @staticmethod
     def cmd_installed(name):
-        if not name in Tools._j.core.myenv._cmd_installed:
-            Tools._j.core.myenv._cmd_installed[name] = shutil.which(name) != None
-        return Tools._j.core.myenv._cmd_installed[name]
+        if not name in j.core.myenv._cmd_installed:
+            j.core.myenv._cmd_installed[name] = shutil.which(name) != None
+        return j.core.myenv._cmd_installed[name]
 
     @staticmethod
     def cmd_args_get():
@@ -1499,10 +1497,10 @@ class Tools:
         """
 
         prefix = "code"
-        if "DIR_CODE" in Tools._j.core.myenv.config:
-            accountdir = os.path.join(Tools._j.core.myenv.config["DIR_CODE"], "github", account)
+        if "DIR_CODE" in j.core.myenv.config:
+            accountdir = os.path.join(j.core.myenv.config["DIR_CODE"], "github", account)
         else:
-            accountdir = os.path.join(Tools._j.core.myenv.config["DIR_BASE"], prefix, "github", account)
+            accountdir = os.path.join(j.core.myenv.config["DIR_BASE"], prefix, "github", account)
         repodir = os.path.join(accountdir, repo)
         gitdir = os.path.join(repodir, ".git")
         dontpullloc = os.path.join(repodir, ".dontpull")
@@ -1557,13 +1555,13 @@ class Tools:
         url = url.strip()
         if ssh == "auto" or ssh == "first":
             try:
-                ssh = Tools._j.core.myenv.available
+                ssh = j.core.myenv.available
             except:
                 ssh = False
         elif ssh or ssh is False:
             pass
         else:
-            raise Tools.exceptions.Base("ssh needs to be auto, first or True or False: here:'%s'" % ssh)
+            raise j.exceptions.Base("ssh needs to be auto, first or True or False: here:'%s'" % ssh)
 
         if url.startswith("ssh://"):
             url = url.replace("ssh://", "")
@@ -1593,7 +1591,7 @@ class Tools:
             match = httpmatch
             url_ssh = False
         else:
-            raise Tools.exceptions.Base(
+            raise j.exceptions.Base(
                 "Url is invalid. Must be in the form of 'http(s)://hostname/account/repo' or 'git@hostname:account/repo'\nnow:\n%s"
                 % url
             )
@@ -1684,9 +1682,9 @@ class Tools:
         url = url.strip()
         if url == "":
             if dest is None:
-                raise Tools.exceptions.Base("dest cannot be None (url is also '')")
+                raise j.exceptions.Base("dest cannot be None (url is also '')")
             if not Tools.exists(dest):
-                raise Tools.exceptions.Base(
+                raise j.exceptions.Base(
                     "Could not find git repo path:%s, url was not specified so git destination needs to be specified."
                     % (dest)
                 )
@@ -1710,7 +1708,7 @@ class Tools:
 
         repository_type = repository_host.split(".")[0] if "." in repository_host else repository_host
 
-        codeDir = Tools._j.core.myenv.config["DIR_CODE"]
+        codeDir = j.core.myenv.config["DIR_CODE"]
 
         if not dest:
             dest = "%(codedir)s/%(type)s/%(account)s/%(repo_name)s" % {
@@ -1806,7 +1804,7 @@ class Tools:
 
         :param repo:
         :param account:
-        :param branch: falls back to the default branch on Tools._j.core.myenv.DEFAULT_BRANCH
+        :param branch: falls back to the default branch on j.core.myenv.DEFAULT_BRANCH
                     if needed, when directory exists and pull is False will not check branch
         :param pull:
         :param reset:
@@ -1819,7 +1817,7 @@ class Tools:
             if rc > 0:
                 Tools.shell()
             current_branch = stdout.strip()
-            j.core.tools.log("Found branch: %s" % current_branch)
+            Tools.log("Found branch: %s" % current_branch)
             return current_branch
 
         def checkoutbranch(args, branch):
@@ -1848,16 +1846,16 @@ class Tools:
             branch = branch2
         elif isinstance(branch, str):
             if "," in branch:
-                raise Tools.exceptions.JSBUG("no support for multiple branches yet")
+                raise j.exceptions.JSBUG("no support for multiple branches yet")
                 branch = [branch.strip() for branch in branch.split(",")]
         elif isinstance(branch, (set, list)):
-            raise Tools.exceptions.JSBUG("no support for multiple branches yet")
+            raise j.exceptions.JSBUG("no support for multiple branches yet")
             branch = [branch.strip() for branch in branch]
         else:
-            raise Tools.exceptions.JSBUG("branch should be a string or list, now %s" % branch)
+            raise j.exceptions.JSBUG("branch should be a string or list, now %s" % branch)
 
-        j.core.tools.log("get code:%s:%s (%s)" % (url, path, branch))
-        if Tools._j.core.myenv.config["SSH_AGENT"]:
+        Tools.log("get code:%s:%s (%s)" % (url, path, branch))
+        if j.core.myenv.config["SSH_AGENT"]:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -1885,7 +1883,7 @@ class Tools:
             """means code is already there, maybe synced?"""
             return gitpath
 
-        if git_on_system and Tools._j.core.myenv.config["USEGIT"]:
+        if git_on_system and j.core.myenv.config["USEGIT"]:
             # there is ssh-key loaded
             # or there is a dir with .git inside and exists
             # or it does not exist yet
@@ -1898,7 +1896,7 @@ class Tools:
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 """
-                j.core.tools.log("get code [git] (first time): %s" % repo)
+                Tools.log("get code [git] (first time): %s" % repo)
                 Tools.execute(C, args=args, showout=True, die_if_args_left=True)
                 C = """
                 cd {ACCOUNT_DIR}
@@ -1924,7 +1922,7 @@ class Tools:
                         cd {REPO_DIR}
                         git checkout . --force
                         """
-                        j.core.tools.log("get code & ignore changes: %s" % repo)
+                        Tools.log("get code & ignore changes: %s" % repo)
                         Tools.execute(
                             C,
                             args=args,
@@ -1942,21 +1940,21 @@ class Tools:
                                     args["MESSAGE"] = input("\nprovide commit message: ")
                                     assert args["MESSAGE"].strip() != ""
                             else:
-                                raise Tools.exceptions.Input("found changes, do not want to commit")
+                                raise j.exceptions.Input("found changes, do not want to commit")
                             C = """
                             set -x
                             cd {REPO_DIR}
                             git add . -A
                             git commit -m "{MESSAGE}"
                             """
-                            j.core.tools.log("get code & commit [git]: %s" % repo)
+                            Tools.log("get code & commit [git]: %s" % repo)
                             Tools.execute(C, args=args, die_if_args_left=True, interactive=True)
                     C = """
                     set -x
                     cd {REPO_DIR}
                     git pull
                     """
-                    j.core.tools.log("pull code: %s" % repo)
+                    Tools.log("pull code: %s" % repo)
                     Tools.execute(
                         C,
                         args=args,
@@ -1967,10 +1965,10 @@ class Tools:
                     )
 
                     if not checkoutbranch(args, branch):
-                        raise Tools.exceptions.Input("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
+                        raise j.exceptions.Input("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
-            j.core.tools.log("get code [zip]: %s" % repo)
+            Tools.log("get code [zip]: %s" % repo)
             args = {}
             args["ACCOUNT_DIR"] = ACCOUNT_DIR
             args["REPO_DIR"] = REPO_DIR
@@ -1989,7 +1987,7 @@ class Tools:
             )
             statinfo = os.stat("/tmp/jumpscale/download.zip")
             if statinfo.st_size < 100000:
-                raise Tools.exceptions.Operations("cannot download:%s resulting file was too small" % args["URL"])
+                raise j.exceptions.Operations("cannot download:%s resulting file was too small" % args["URL"])
             else:
                 script = """
                 set -ex
@@ -2019,7 +2017,7 @@ class Tools:
         return dict
 
         """
-        path = Tools.text_replace(path)
+        path = j.data.text.replace(path)
         res = {}
         if content == "":
             if executor is None:
@@ -2045,7 +2043,7 @@ class Tools:
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                raise Tools.exceptions.Input("Cannot process config: did not find = in line '%s'" % line)
+                raise j.exceptions.Input("Cannot process config: did not find = in line '%s'" % line)
             key, val = line.split("=", 1)
             if "#" in val:
                 val = val.split("#", 1)[0]
@@ -2073,7 +2071,7 @@ class Tools:
 
     @staticmethod
     def config_save(path, data, upper=True, executor=None):
-        path = Tools.text_replace(path)
+        path = j.data.text.replace(path)
         out = ""
         for key, val in data.items():
             if upper:

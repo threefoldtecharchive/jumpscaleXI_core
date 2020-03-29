@@ -97,8 +97,8 @@ class Registry:
         else:
             if not c["keypub"].strip() == keypub.strip():
                 showdetails(c)
-                y = Tools.ask_yes_no("Are you sure your are above?")
-                raise Tools.exceptions.Input(
+                y = j.core.tools.ask_yes_no("Are you sure your are above?")
+                raise j.exceptions.Input(
                     "keypub does not correspond, your name:%s, is this a unique name, comes from your main sshkey, change if needed"
                     % myname
                 )
@@ -141,3 +141,4 @@ class Registry:
                 config["clients"] = {}
             self._config = config
         return self._config
+

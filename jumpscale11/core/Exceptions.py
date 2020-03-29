@@ -90,7 +90,7 @@ class BaseJSException(Exception):
     # def __repr__(self):
     #     if not self.logdict:
     #         raise JSBUG("logdict not known (is None)")
-    #     print(Tools.log2str(logdict))
+    #     print(j.core.tools.log2str(logdict))
     #     return ""
 
 
@@ -173,3 +173,4 @@ class JSExceptions:
     Halt = Halt1
     Base = BaseJSException
     RemoteException = RemoteException1
+

@@ -144,7 +144,7 @@ class WireGuardServer:
         PrivateKey = {WIREGUARD_SERVER_PRIVKEY}
         ListenPort = {WIREGUARD_PORT}
         """
-        C = j.core.tools.text_replace(C, args=config, die_if_args_left=True)
+        C = j.data.text.replace(C, args=config, die_if_args_left=True)
 
         for client_id, client in self.config["clients"].items():
             C2 = """
@@ -153,7 +153,7 @@ class WireGuardServer:
             PublicKey = {WIREGUARD_CLIENT_PUBKEY}
             AllowedIPs = 10.{SUBNET}.0/24
             """
-            C2 = j.core.tools.text_replace(C2, args=client, die_if_args_left=True)
+            C2 = j.data.text.replace(C2, args=client, die_if_args_left=True)
             C += C2
 
         path = "/etc/wireguard/wg0.conf"
@@ -172,7 +172,7 @@ class WireGuardServer:
         PrivateKey = {WIREGUARD_CLIENT_PRIVKEY}
         """
         self.config_local["SUBNET"] = self._subnet_calc(self.myid)
-        C = j.core.tools.text_replace(C, args=self.config_local)
+        C = j.data.text.replace(C, args=self.config_local)
         C2 = """
 
         [Peer]
@@ -182,7 +182,7 @@ class WireGuardServer:
         AllowedIPs = 172.17.0.0/16
         PersistentKeepalive = 25
         """
-        C2 = j.core.tools.text_replace(C2, args=self.config_server)
+        C2 = j.data.text.replace(C2, args=self.config_server)
         C += C2
         j.core.tools.file_write(self.config_path_client, C)
         self.disconnect()
@@ -198,7 +198,7 @@ class WireGuardServer:
     @property
     def config_path_client(self):
         path = "{DIR_BASE}/cfg/wireguard/%s/wg0.conf" % self.serverid
-        path = j.core.tools.text_replace(path)
+        path = j.data.text.replace(path)
         j.core.tools.dir_ensure(os.path.dirname(path))
         return path
 
@@ -220,7 +220,7 @@ class WireGuardServer:
     @property
     def config_file_client(self):
         path = "{DIR_BASE}/cfg/wireguard/%s/wg0.conf" % self.serverid
-        path = j.core.tools.text_replace(path)
+        path = j.data.text.replace(path)
 
         return str(j.core.tools.file_read(path).decode())
 
@@ -232,3 +232,4 @@ class WireGuardServer:
         return out
 
     __str__ = __repr__
+
